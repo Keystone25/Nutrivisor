@@ -46,7 +46,7 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(u_id):
-    return User.query.get(int(u_id))
+    return db.session.get(User, int(u_id))
 
 
 
@@ -98,7 +98,14 @@ class menu(db.Model):  #this is a table named menu inside the menu1 database for
     imgpath = db.Column(db.String(100), default='')
     quantity = db.Column(db.String(50))
 
-
+class MealLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.u_id'))
+    food_name = db.Column(db.String(100))
+    calories = db.Column(db.Float)
+    meal_type = db.Column(db.String(20))  # breakfast/lunch/dinner/snack
+    time = db.Column(db.String(20))       # "08:30 AM"
+    date = db.Column(db.String(20))
 
 
 
@@ -114,15 +121,18 @@ class daily2(db.Model):#this is a table named daily2 inside the menu1 database f
     di_item = db.Column(db.String(50), default='')
     di_cal = db.Column(db.Float, default=0.0)
 
+
 class Nutrition(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     food_name = db.Column(db.String(100), unique=True)
+    quantity = db.Column(db.String(50))
     calories = db.Column(db.Float)
     protein = db.Column(db.Float)
     carbs = db.Column(db.Float)
     fat = db.Column(db.Float)
     fiber = db.Column(db.Float)
-    category = db.Column(db.String(20))  # 'healthy' or 'unhealthy'
+    glycemic_i = db.Column(db.Integer)
+    category = db.Column(db.String(20))
     suggestion = db.Column(db.String(200))
 
 
@@ -132,7 +142,8 @@ class Feed(db.Model):
     message = db.Column(db.String(600))
     timestamp = db.Column(db.String(50))
 
-
+def get_today():
+    return datetime.now(timezone("Asia/Kolkata")).strftime('%Y-%m-%d')
 # =========================
 # Helper Function for diabetic staus in live capture.
 # =========================
@@ -154,7 +165,7 @@ def get_diabetic_status(food_name, user):
     gi_limit, gl_limit = limits.get(user.diabetes_type, (100, 100))
 
     # Get food from DB
-    food = menu.query.filter(menu.item.ilike(f"%{food_name}%")).first()
+    food = Nutrition.query.filter(Nutrition.food_name.ilike(f"%{food_name}%")).first()
 
     if not food:
         return {
@@ -162,7 +173,7 @@ def get_diabetic_status(food_name, user):
             "message": "No data available"
         }
 
-    gi = food.glycemic_index or 50
+    gi = food.glycemic_i or 50
     carbs = food.carbs or 0
     gl = calculate_gl(gi, carbs)
 
@@ -259,9 +270,16 @@ def gen_frames():
         # =========================
         # PREPROCESS (LIGHTWEIGHT)
         # =========================
-        roi = cv2.resize(frame, (224, 224))   #  smaller = faster
-        roi = img_to_array(roi)
-        roi = roi.astype("float") / 255.0
+        roi = cv2.resize(frame, (224, 224))
+
+        # ✅ Convert BGR → RGB (CRITICAL)
+        roi = cv2.cvtColor(roi, cv2.COLOR_BGR2RGB)
+
+        roi = roi.astype(np.float32)
+
+        # ✅ Teachable Machine normalization
+        roi = (roi / 127.5) - 1
+
         roi = np.expand_dims(roi, axis=0)
 
         # =========================
@@ -270,17 +288,23 @@ def gen_frames():
         pred = model.predict(roi, verbose=0)
         ind = np.argmax(pred)
         confidence = float(np.max(pred))
+        print("Confidence:", confidence)
 
         print("Prediction shape:", pred.shape)
-        print("Labels count:", len(labels))
+        print("Labels count:", len(labels)) 
         print("Predicted index:", ind)
+
+        # ✅ SAFE CHECK
+        if ind >= len(labels):
+            print(f"[ERROR] Index {ind} out of range for labels")
+            continue
 
         label_text = f"{labels[ind]} ({confidence:.2f})"
 
         # =========================
         # AUTO CAPTURE
         # =========================
-        if confidence > 0.75 and not detection_done:
+        if confidence > 0.60 and not detection_done:
             captured_frame = frame.copy()
             food_label = labels[ind]
             detection_done = True
@@ -310,17 +334,27 @@ def main_all():
 @login_required
 def U_Home_page():
 
-    today = datetime.now(timezone("Asia/Kolkata")).strftime('%d-%m-%Y')
+    msg = request.args.get("msg")
+    today = get_today()
+
+    logs = MealLog.query.filter_by(
+        user_id=current_user.id,
+        date=today
+    ).all()
 
     quota = daily2.query.filter_by(user_id=current_user.id).first()
 
-    # Create if not exists
     if not quota:
-        quota = daily2(user_id=current_user.id,date=today,br_item='', br_cal=0,lu_item='', lu_cal=0,di_item='', di_cal=0)
+        quota = daily2(
+            user_id=current_user.id,
+            date=today,
+            br_item='', br_cal=0,
+            lu_item='', lu_cal=0,
+            di_item='', di_cal=0
+        )
         db.session.add(quota)
         db.session.commit()
 
-    # RESET IF NEW DAY
     if quota.date != today:
         quota.date = today
         quota.br_item = ''
@@ -331,19 +365,16 @@ def U_Home_page():
         quota.di_cal = 0
         db.session.commit()
 
-    # CALCULATE TOTAL
     total = (quota.br_cal or 0) + (quota.lu_cal or 0) + (quota.di_cal or 0)
 
-    # STATUS
-    if total >= current_user.cal:
-        msg = "limit"
-    elif total >= current_user.cal * 0.8:
-        msg = "warning"
-    else:
-        msg = "good"
-
-    return render_template('U_Home_page_1.html',menu=menu.query.all(),daily=quota,total=total,target=current_user.cal,msg=msg)
-
+    return render_template(
+        'U_Home_page_1.html',
+        daily=quota,
+        total=total,
+        target=current_user.cal,
+        logs=logs,
+        msg=msg 
+    )
 
 @app.route('/U_Diet_Recommender')
 @login_required
@@ -739,6 +770,7 @@ def reset():
 @app.route('/detect_status')
 @login_required
 def detect_status():
+    global detection_done, food_label
 
     nutrition = None
     diabetic_info = None
@@ -755,6 +787,8 @@ def detect_status():
         "food": food_label,
 
         "nutrition": {
+            "quantity": nutrition.quantity if nutrition else None,
+            "glycemic_i": nutrition.glycemic_i if nutrition else None,
             "calories": nutrition.calories if nutrition else None,
             "protein": nutrition.protein if nutrition else None,
             "carbs": nutrition.carbs if nutrition else None,
@@ -835,6 +869,16 @@ def confirm():
         quota.di_item = (quota.di_item + ", " + item) if quota.di_item else item
         quota.di_cal = (quota.di_cal or 0) + cal
 
+    new_log = MealLog(
+        user_id=current_user.id,
+        food_name=item,
+        calories=cal,
+        meal_type=meal_type,
+        time=datetime.now().strftime("%I:%M %p"),
+        date=get_today()
+    )
+
+    db.session.add(new_log)
     db.session.commit()
 
     return redirect(url_for('U_Home_page'))
