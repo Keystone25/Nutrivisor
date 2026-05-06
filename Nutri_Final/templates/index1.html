@@ -143,33 +143,31 @@ setInterval(async () => {
     const res = await fetch('/detect_status');
     const data = await res.json();
 
-    if (data.detected && !shown) {
+
+
+    if (data.detected === true && shown === false) {
 
         shown = true;
 
-        // FOOD NAME
         document.getElementById("foodName").innerText = "🍽 " + data.food;
 
-        // NUTRITION
         if (data.nutrition) {
             document.getElementById("nutritionBlock").innerHTML = `
                 <div class="nutri-grid">
-                    <div class="nutri-box">🔥 Cal ${data.nutrition.calories}</div>
-                    <div class="nutri-box">🥩 Protein ${data.nutrition.protein}</div>
-                    <div class="nutri-box">🍞 Carbs ${data.nutrition.carbs}</div>
-                    <div class="nutri-box">🧈 Fat ${data.nutrition.fat}</div>
+                    <div class="nutri-box">⚖️  Qty: ${data.nutrition.quantity}</div>
+                    <div class="nutri-box">📋  GI: ${data.nutrition.glycemic_i}</div>
+                    <div class="nutri-box">🔥 Cal: ${data.nutrition.calories}</div>
+                    <div class="nutri-box">🥩 Protein: ${data.nutrition.protein}</div>
+                    <div class="nutri-box">🍞 Carbs: ${data.nutrition.carbs}</div>
+                    <div class="nutri-box">🧈 Fat: ${data.nutrition.fat}</div>
+                    
                 </div>
             `;
 
             document.getElementById("suggestion").innerText =
                 "✨ " + data.nutrition.suggestion;
-
-        } else {
-            document.getElementById("nutritionBlock").innerHTML =
-                "<p>No data found</p>";
         }
 
-        // DIABETIC STATUS (merged here — NO second API call)
         if (data.diabetic) {
             let status = data.diabetic.status;
             let message = data.diabetic.message;
@@ -183,12 +181,10 @@ setInterval(async () => {
                 `<b style="color:${color}">Diabetic Check: ${message}</b>`;
         }
 
-        // SHOW POPUP
         document.getElementById("popup").style.display = "block";
     }
 
 }, 800);
-
 
 function scanAgain() {
     fetch('/reset');
