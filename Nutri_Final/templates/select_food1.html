@@ -59,10 +59,30 @@ body {
     color: #555;
     font-size: 14px;
     font-weight: 500;
+    position: relative;
+    transition: 0.3s;
 }
 
+/* TEXT COLOR HOVER */
 .top-nav a:hover {
     color: #6C63FF;
+}
+
+/* UNDERLINE ANIMATION */
+.top-nav a::after {
+    content: "";
+    position: absolute;
+    width: 0%;
+    height: 2px;
+    background: #6C63FF;
+    bottom: -4px;
+    left: 0;
+    transition: 0.3s;
+}
+
+/* EXPAND LINE ON HOVER */
+.top-nav a:hover::after {
+    width: 100%;
 }
 
 /* HIDE DESKTOP NAV ON MOBILE */

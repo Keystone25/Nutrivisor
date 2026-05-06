@@ -1,388 +1,605 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-    <title>Settings</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
-        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <link rel="stylesheet" href="static\css\userstyle.css">
-    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-    <!-- Navbar -->
-    <div class="w3-top">
-        <div class="w3-bar w3-yellow w3-card">
-            <a class="w3-bar-item w3-button w3-padding-large w3-hide-medium w3-hide-large w3-right"
-                href="javascript:void(0)" onclick="myFunction()" title="Toggle Navigation Menu">
-                <i class="fa fa-bars"></i>
-            </a>
-            <!--<a href="U_Home_page_1.html" class="w3-bar-item w3-button w3-padding-large">Home</a>
-            <a href="U_Progress.html" class="w3-bar-item w3-button w3-padding-large w3-hide-small">Progress</a>
-            <a href="U_Discover.html" class="w3-bar-item w3-button w3-padding-large w3-hide-small">Discover</a>
-            <a href="#tour" class="w3-bar-item w3-button w3-padding-large w3-hide-small">Food Adder</a>
-            <a href="U_Settings.html" class="w3-bar-item w3-button w3-padding-large w3-hide-small">Settings</a>-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-            <a href="{{ url_for('U_Home_page')}}" class="w3-bar-item w3-button w3-padding-large  w3-hide-small">Home</a>
-            <a href="{{ url_for('U_Diet_recommender')}}"
-                class="w3-bar-item w3-button w3-padding-large  w3-hide-small">Diet Recommender</a>
-            <a href="{{ url_for('U_Discover')}}"
-                class="w3-bar-item w3-button w3-padding-large  w3-hide-small">Discover</a>
-            <a href="{{ url_for('U_Select_food')}}" class="w3-bar-item w3-button w3-padding-large w3-hide-small">Food
-                Scanner</a>
-            <a href="{{ url_for('U_Settings')}}"
-                class="w3-bar-item w3-button w3-padding-large w3-hide-small">Settings</a>
-            <!--<div class="w3-dropdown-hover w3-hide-small">
-            <button class="w3-padding-large w3-button" title="More">MORE <i class="fa fa-caret-down"></i></button>     
-            <div class="w3-dropdown-content w3-bar-block w3-card-4">
-            <a href="#" class="w3-bar-item w3-button">Merchandise</a> 
-            <a href="#" class="w3-bar-item w3-button">Extras</a>
-            <a href="#" class="w3-bar-item w3-button">Media</a>
-            </div>
-            </div>
-            -->
-        </div>
-    </div>
+<title>Settings</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+*{
+    box-sizing: border-box;
+}
+/* ===== GLOBAL ===== */
+body{
+    font-family:'Poppins',sans-serif;
+    margin:0;
+    background:linear-gradient(135deg,#EDE7FF,#F8F6FF);
+    color:#333;
+}
+
+.app{
+    max-width:1200px;
+    margin:auto;
+    padding:30px 20px 100px;
+}
+
+/* ===== HEADER ===== */
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:30px;
+    flex-wrap:wrap; 
+    gap:15px;       
+}
+
+.header h2 {
+    font-size: 32px;
+    margin: 0;
+}
+
+.top-nav{
+    display:flex;
+    gap:20px;
+    background:rgba(255,255,255,0.6);
+    backdrop-filter:blur(10px);
+    padding:10px 18px;
+    border-radius:15px;
+}
+
+.top-nav a {
+    text-decoration: none;
+    color: #555;
+    font-size: 14px;
+    font-weight: 500;
+    position: relative;
+    transition: 0.3s;
+}
+
+/* TEXT COLOR HOVER */
+.top-nav a:hover {
+    color: #6C63FF;
+}
+
+/* UNDERLINE ANIMATION */
+.top-nav a::after {
+    content: "";
+    position: absolute;
+    width: 0%;
+    height: 2px;
+    background: #6C63FF;
+    bottom: -4px;
+    left: 0;
+    transition: 0.3s;
+}
+
+/* EXPAND LINE ON HOVER */
+.top-nav a:hover::after {
+    width: 100%;
+}
+
+input, select, textarea{
+    width:100%;
+    max-width:100%; 
+}
+
+/* ===== LAYOUT ===== */
+.settings-container{
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap; 
+}
+/* ===== SIDEBAR ===== */
+.sidebar{
+    width:260px;
+    min-width:240px;
+    flex-shrink:0;
+    background:rgba(255,255,255,0.7);
+    backdrop-filter:blur(12px);
+    border-radius:20px;
+    padding:25px;
+    box-shadow:0 10px 30px rgba(108,99,255,0.15);
+}
+
+.profile{
+    text-align:center;
+    margin-bottom:20px;
+}
+
+.profile img{
+    width:90px;
+    border-radius:50%;
+}
+
+.profile h4{
+    margin:8px 0 0;
+}
+
+.profile p{
+    font-size:13px;
+    color:#777;
+}
+
+.menu a{
+    display:block;
+    padding:12px;
+    margin:6px 0;
+    border-radius:12px;
+    text-decoration:none;
+    color:#555;
+    transition:0.3s;
+}
+
+.menu a.active{
+    background:linear-gradient(135deg,#6C63FF,#4A47A3);
+    color:white;
+}
+
+/* ===== CONTENT ===== */
+.content{
+    flex:1;
+    min-width:0;
+    background:rgba(255,255,255,0.7);
+    backdrop-filter:blur(12px);
+    border-radius:20px;
+    padding:30px;
+    box-shadow:0 10px 30px rgba(108,99,255,0.15);
+}
+
+/* FORM */
+.row{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:20px;
+}
+
+.form-group{
+    margin-bottom:15px;
+}
+
+input, select, textarea{
+    width:100%;
+    padding:12px;
+    border-radius:12px;
+    border:1px solid #ddd;
+    margin-top:5px;
+    box-sizing:border-box;
+}
+
+/* BUTTON */
+.btn{
+    padding:12px 20px;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    font-weight:600;
+}
+
+.primary{
+    background:linear-gradient(135deg,#6C63FF,#4A47A3);
+    color:white;
+}
+
+.secondary{
+    background:#eee;
+}
+
+/* ===== LOGOUT MODAL ===== */
+.overlay{
+    position:fixed;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.4);
+    top:0;
+    left:0;
+    display:none;
+    z-index:99;
+}
+
+.overlay.active{
+    display:block;
+}
+
+.logout-modal{
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%) scale(0);
+    background:white;
+    padding:25px;
+    border-radius:20px;
+    width:300px;
+    text-align:center;
+    transition:0.3s;
+    z-index:100;
+}
+
+.logout-modal.open{
+    transform:translate(-50%,-50%) scale(1);
+}
+
+.modal-actions{
+    display:flex;
+    justify-content:space-around;
+    margin-top:20px;
+}
+
+/* ===== IOS GLASS NAVBAR ===== */
+.navbar {
+    position: fixed;
+    bottom: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+
+    padding: 14px 0;
+
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(100px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
 
 
-    <!-- Navbar on small screens (remove the onclick attribute if you want the navbar to always show on top of the content when clicking on the links) -->
-    <div id="navDemo" class="w3-bar-block w3-white w3-border w3-hide w3-hide-large w3-hide-medium w3-top"
-        style="margin-top:46px">
-        <a href="{{ url_for('U_Home_page')}}" class="w3-bar-item w3-button w3-padding-large"
-            onclick="myFunction()">Home</a>
-        <a href="{{ url_for('U_Diet_recommender')}}" class="w3-bar-item w3-button w3-padding-large"
-            onclick="myFunction()">Diet Recommender</a>
-        <a href="{{ url_for('U_Discover')}}" class="w3-bar-item w3-button w3-padding-large"
-            onclick="myFunction()">Discover</a>
-        <a href="{{ url_for('U_Select_food')}}" class="w3-bar-item w3-button w3-padding-large"
-            onclick="myFunction()">Food Scanner</a>
-        <a href="{{ url_for('U_Settings')}}" class="w3-bar-item w3-button w3-padding-large"
-            onclick="myFunction()">Settings</a>
-    </div>
+    border: 1px solid rgba(255, 255, 255, 0.4);
 
+    box-shadow:
+        0 8px 30px rgba(0,0,0,0.15),
+        inset 0 1px 1px rgba(255,255,255,0.4);
 
-    <section style="width: 100%; height: 5vh;"></section>
-    <title>User_Discover</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-    <link rel="stylesheet" href="style1.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <style>
-        body,
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6 {
-            font-family: "Raleway", sans-serif
-        }
-    </style>
+    overflow: hidden;
+}
+
+/* top glow line */
+.navbar::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 10%;
+    width: 80%;
+    height: 1px;
+    background: rgba(255,255,255,0.6);
+}
+
+/* ICON STYLE */
+.navbar a {
+    font-size: 26px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+/* HOVER */
+.navbar a:hover {
+    transform: scale(1.25);
+    color: #6C63FF;
+}
+
+/* TAP EFFECT */
+.navbar a:active {
+    transform: scale(0.9);
+}
+
+@media(max-width:1025px){
+
+    .settings-container{
+        flex-direction:column;
+    }
+
+    .sidebar{
+        width:100%;
+    }
+
+    .content{
+        width:100%;
+    }
+
+    .row{
+        grid-template-columns:1fr;
+    }
+
+    .top-nav{
+        display:none;
+    }
+}
+@media(min-width:1025px){
+    .navbar{
+        display:none;
+    }
+}
+
+</style>
 </head>
 
 <body>
-    <main>
-        <div class="container">
-            <br>
-            <h1>
-                <center><b>Settings</b></center>
-            </h1>
-            <br>
-            <div class="w3-card">
-                <div class="bg-white shadow rounded-lg d-block d-sm-flex">
-                    <div class="profile-tab-nav border-right">
 
-                        <div class="p-4">
-                            <div class="img-circle text-center mb-3">
-                                <img id="userimg" src="\static\avatar.png" class="shadow">
-                            </div>
-                            <h4 class="text-center" id="username">{{fname}}</h4>
-                            <h6 class="text-center" id="usermail">{{email}}</h6>
-                        </div>
+<div class="app">
 
-                        <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist"
-                            aria-orientation="vertical">
+<div class="header">
+    <h2>Settings</h2>
 
-                            <a class="nav-link active" id="account-tab" data-toggle="pill" href="#account" role="tab"
-                                aria-controls="account" aria-selected="true">
-                                <i class="fa fa-home text-center mr-1"></i>
-                                Account
-                            </a>
+    <div class="top-nav">
+        <a href="{{ url_for('U_Home_page') }}">Home</a>
+        <a href="{{ url_for('U_Diet_recommender') }}">Diet</a>
+        <a href="{{ url_for('U_Discover') }}">Discover</a>
+        <a href="{{ url_for('U_Select_food') }}">Scanner</a>
+        <a href="{{ url_for('U_Settings') }}">Settings</a>
+    </div>
+</div>
 
+<div class="settings-container">
 
-                            <a class="nav-link" id="password-tab" data-toggle="pill" href="#password" role="tab"
-                                aria-controls="password" aria-selected="false">
-                                <i class="fa fa-key text-center mr-1"></i>
-                                Password
-                            </a>
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="profile">
+        <img src="{{ url_for('static', filename='avatar.png') }}">
+        <h4>{{fname}}</h4>
+        <p>{{email}}</p>
+    </div>
 
+    <div class="menu">
+        <a href="javascript:void(0)" class="active" onclick="showTab(event,'account')">Account</a>
+        <a href="javascript:void(0)" onclick="showTab(event,'password')">Password</a>
+        <a href="javascript:void(0)" onclick="showTab(event,'health')">Health</a>
+        <a href="javascript:void(0)" onclick="showTab(event,'feedback')">Feedback</a>
+        <a href="#" onclick="openLogout()">Logout</a>
+    </div>
+</div>
 
-                            <a class="nav-link" id="measurement-tab" data-toggle="pill" href="#measurement" role="tab"
-                                aria-controls="measurement" aria-selected="false">
-                                <i class="fa fa-bar-chart text-center mr-1"></i>
-                                Update Health Stats
-                            </a>
+<!-- CONTENT -->
+<div class="content">
 
+<!-- ACCOUNT -->
+<div id="account" class="tab">
+<h3>Account Settings</h3>
 
-                            <a class="nav-link" id="feedback-tab" data-toggle="pill" href="#feedback" role="tab"
-                                aria-controls="feedback" aria-selected="false">
-                                <i class="fa fa-support text-center mr-1"></i>
-                                feedback
-                            </a>
+<form method="post" action="UpdateUser">
 
-                            <a class="nav-tabs" style="line-height: 10;">
-                                <br>
-                            </a>
+<div class="row">
+    <div class="form-group">
+        <label>First Name</label>
+        <input type="text" name="fname" value="{{fname}}">
+    </div>
 
+    <div class="form-group">
+        <label>Last Name</label>
+        <input type="text" name="lname" value="{{lname}}">
+    </div>
+</div>
 
-                            <a class="nav-link" id="logout-tab" data-toggle="pill" href="#logout" role="tab"
-                                aria-controls="logout" aria-selected="false">
-                                <i class="fa fa-window-close text-center mr-1"></i>
-                                Logout
-                            </a>
-                        </div>
-                    </div>
-                    <div class="tab-content p-4 p-md-5" id="v-pills-tabContent">
-                        <div class="tab-pane fade show active" id="account" role="tabpanel"
-                            aria-labelledby="account-tab">
+<div class="row">
+    <div class="form-group">
+        <label>Email</label>
+        <input type="text" name="email" value="{{email}}">
+    </div>
 
-                            <h3 class="mb-4"><b>Account Settings</b></h3>
-                          <!--  <div class="row">
-                                <img src="/static/avatar.png" class="imgr">
-                                <div class="pl-sm-4 pl-2" id="img-section">
-                                    <b>Profile Photo</b>
-                                    <p>Accepted file types .jpg &.png. Less than 1MB</p>
-                                    <button class="btn button border"><b>Upload</b></button>
-                                </div>
-                            </div>-->
-                            <br>
-                            <form method="post" action="UpdateUser">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>First Name</label>
-                                            <input type="text" class="form-control" name="fname"
-                                                placeholder="Enter First Name" value="{{fname}}">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Last Name</label>
-                                            <input type="text" class="form-control" name="lname"
-                                                placeholder="Enter Last Name" value="{{lname}}">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Email</label>
-                                            <input type="text" name="email" class="form-control" value="{{email}}"
-                                                placeholder="Enter Email id">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Phone number</label>
-                                            <input name="phone" type="tel" class="form-control"
-                                                placeholder="Enter Phone number">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <button class="btn btn-primary" type="submit">Update</button>
-                                    <button class="btn btn-light">Cancel</button>
-                                </div>
-                            </form>
+    <div class="form-group">
+        <label>Phone</label>
+        <input type="text" name="phone">
+    </div>
+</div>
 
-                        </div>
-                        <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
-                            <h3 class="mb-4"><b>Password Settings</b></h3>
-                            <form method="post" action="UpdatePassword">
+<br>
+<button class="btn primary">Update</button>
 
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Old password</label>
-                                            <input type="password" class="form-control" name="old-pass">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>New password</label>
-                                            <input type="password" class="form-control" name="new-pass" id="new-pass"
-                                                oninput="checkInput()">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Confirm new password</label>
-                                            <input type="password" class="form-control" name="confirm-pass"
-                                                id="confirm-pass" oninput="checkInput()">
-                                        </div>
-                                        {{password}}
-                                    </div>
-                                    <div id="pass-message"></div>
-                                    <script>
-                                        const checkInput = () => {
-                                            let pass = document.getElementById("new-pass").value;
-                                            let comp = document.getElementById("confirm-pass").value;
-                                            let passcheck = document.getElementById("pass-message");
-                                            let submit = document.getElementById("submit-btn");
+</form>
+</div>
 
-                                            if (pass === comp) {
-                                                passcheck.textContent = "Passwords Match!"
-                                                submit.disabled = false;
-                                            } else {
-                                                passcheck.textContent = "Password do not Match!"
-                                                submit.disabled = true;
-                                            }
-                                        }
-                                    </script>
-                                </div>
-                                {%- for category, message in get_flashed_messages(with_categories = true) %}
-                                <div id="error-msg">
-                                    {{ message }}
-                                </div>
-                                {%- endfor %}
-                                <div>
-                                    <button class="btn btn-primary" type="submit" id="submit-btn"
-                                        disabled>Update</button>
-                                    <button class="btn btn-light">Cancel</button>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="tab-pane fade" id="measurement" role="tabpanel" aria-labelledby="measurement-tab">
-                            <h3 class="mb-4"><b>Health Status</b></h3>
-                            <form method="post" action="UpdateMeasure">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Height</label>
-                                            <input type="number" class="form-control" name="height" value="{{height}}">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Weight</label>
-                                            <input type="number" class="form-control" name="weight" value="{{weight}}">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Gender</label>
-                                            <br>
-                                            <select class="form-control" name="gender">
-                                                <option selected value="{{gender}}"></option>
-                                                <option value="male">Male</option>
-                                                <option value="female">Female</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Age</label>
-                                            <input type="number" class="form-control" name="age" value="{{age}}">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Body type</label>
-                                            <br>
-                                            <select class="form-control" name="bodytype">
-                                                <option selected value="{{bodytype}}"></option>
-                                                <option value="Endomorph">Endomorph</option>
-                                                <option value="Ectomorph">Ectomorph</option>
-                                                <option value="Mesomorph">Mesomorph</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Diabetes Type</label>
-                                            <br>
-                                            <select class="form-control" name="diabetes_type">
-                                                <option selected value="{{diabetes_type}}"></option>
-                                                <option value="type1">Type 1</option>
-                                                <option value="type2">Type 2</option>
-                                                <option value="prediabetes">Prediabetes</option>
-                                                <option value="gestational">Gestational</option>
-                                                <option value="">NIL</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <button class="btn btn-primary" type="submit">Update</button>
-                                    <button class="btn btn-light">Cancel</button>
-                                </div>
-                            </form>
-                        </div>
+<!-- PASSWORD -->
+<div id="password" class="tab" style="display:none">
 
+<h3>Password</h3>
 
+<form method="post" action="UpdatePassword">
 
+<div class="form-group">
+    <label>Old Password</label>
+    <input type="password" name="old-pass" required>
+</div>
 
-                        <div class="tab-pane fade" id="feedback" role="tabpanel" aria-labelledby="feedback-tab">
-                            <h3 class="mb-4"><b>Feedback</b></h3>
-                            <form action="{{ request.path }}" method="post">
-                                <div class="form-group">
-                                    <label for="name">Name : </label><br>
-                                    <input type="text" name="name" placeholder="Enter name" value="{{fname}}" /><br><br>
-                                    <label for="message">Message : </label><br>
-                                    <textarea id="message" name="message" placeholder="Write something.."
-                                        style="height:200px"></textarea>
-                                </div>
-                                <div>
-                                    <button class="btn btn-primary" type="submit">Submit</button>
-                                </div>
-                            </form>
-                        </div>
+<div class="form-group">
+    <label>New Password</label>
+    <input type="password" id="new-pass" name="new-pass" oninput="checkPass()" required>
+</div>
 
-                        <div class="tab-pane fade" id="logout" role="tabpanel" aria-labelledby="logout-tab">
-                            <h3 class="mb-4">Logout</h3>
-                            <form action="{{ request.path }}" method="post">
-                                <div class="form-group">
-                                    <label for="name"> Are you sure you want to log out?</label><br>
-                                </div>
-                                <div>
-                                    <a href="{{ url_for('logout') }}" class="btn btn-primary">Logout</a>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-        <script>
-            // Script to open and close sidebar
-            function w3_open() {
-                document.getElementById("mySidebar").style.display = "block";
-                document.getElementById("myOverlay").style.display = "block";
-            }
+<div class="form-group">
+    <label>Confirm Password</label>
+    <input type="password" id="confirm-pass" name="confirm-pass" oninput="checkPass()" required>
+</div>
 
-            function w3_close() {
-                document.getElementById("mySidebar").style.display = "none";
-                document.getElementById("myOverlay").style.display = "none";
-            }
+<p id="msg"></p>
 
-            function myFunction() {
-                var x = document.getElementById("navDemo");
-                if (x.className.indexOf("w3-show") == -1) {
-                    x.className += " w3-show";
-                } else {
-                    x.className = x.className.replace(" w3-show", "");
-                }
-            }
-        </script>
+<button class="btn primary" id="submit-btn" disabled>Update</button>
 
-    </main>
+</form>
+</div>
+
+<!-- HEALTH -->
+<div id="health" class="tab" style="display:none">
+
+<h3>Health Stats</h3>
+
+<form method="post" action="UpdateMeasure">
+
+<div class="row">
+    <div class="form-group">
+        <label>Height</label>
+        <input type="number" name="height" value="{{height}}">
+    </div>
+
+    <div class="form-group">
+        <label>Weight</label>
+        <input type="number" name="weight" value="{{weight}}">
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <label>Age</label>
+        <input type="number" name="age" value="{{age}}">
+    </div>
+
+    <div class="form-group">
+        <label>Gender</label>
+        <select name="gender">
+            <option value="{{gender}}">{{gender}}</option>
+            <option>Male</option>
+            <option>Female</option>
+        </select>
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <label>diabetes-type</label>
+        <select name="diabetes_type">
+        <option value="{{diabetes_type}}">{{diabetes_type}}</option>
+        <option value="none">None</option>
+        <option value="type1">Type 1</option>
+        <option value="type2">Type 2</option>
+        <option value="prediabetes">Prediabetes</option>
+        <option value="gestational">Gestational</option>
+    </select>
+    </div>
+    <div class="form-group">
+        <label>Body type</label>
+        <select class="form-control" name="bodytype">
+            <option selected value="{{bodytype}}"></option>
+            <option value="Endomorph">Endomorph</option>
+            <option value="Ectomorph">Ectomorph</option>
+            <option value="Mesomorph">Mesomorph</option>
+        </select>
+    </div>
+</div>
+
+<br>
+<button class="btn primary">Update</button>
+
+</form>
+</div>
+
+<!-- FEEDBACK -->
+<div id="feedback" class="tab" style="display:none">
+
+<h3>Feedback</h3>
+
+<form method="post">
+<input type="hidden" name="name" value="{{fname}}">
+<textarea name="message" placeholder="Write feedback..." style="height:150px"></textarea>
+<br><br>
+<button class="btn primary">Submit</button>
+</form>
+
+</div>
+
+</div>
+</div>
+</div>
+
+<!-- LOGOUT MODAL -->
+<div class="overlay" id="overlay"></div>
+
+<div class="logout-modal" id="logoutModal">
+    <h3>Confirm Logout</h3>
+    <p>Are you sure?</p>
+    <div class="modal-actions">
+        <button onclick="logout()" class="btn primary">Yes</button>
+        <button onclick="closeLogout()" class="btn secondary">Cancel</button>
+    </div>
+</div>
+
+<!-- MOBILE NAV -->
+<div class="navbar">
+    <a href="{{ url_for('U_Home_page') }}">🏠</a>
+    <a href="{{ url_for('U_Diet_recommender') }}">🥗</a>
+    <a href="{{ url_for('U_Discover') }}">🔍</a>
+    <a href="{{ url_for('U_Select_food') }}">📷</a>
+    <a href="{{ url_for('U_Settings') }}">⚙️</a>
+</div>
+
+<script>
+
+/* TAB SWITCH */
+function showTab(e,id){
+    document.querySelectorAll('.tab').forEach(t=>t.style.display='none');
+    document.getElementById(id).style.display='block';
+
+    document.querySelectorAll('.menu a').forEach(a=>a.classList.remove('active'));
+    e.target.classList.add('active');
+}
+
+/* PASSWORD CHECK */
+function checkPass(){
+    let p1=document.getElementById("new-pass").value;
+    let p2=document.getElementById("confirm-pass").value;
+    let msg=document.getElementById("msg");
+    let btn=document.getElementById("submit-btn");
+
+    if(p1===p2 && p1.length>0){
+        msg.innerText="Passwords match";
+        msg.style.color="green";
+        btn.disabled=false;
+    }else{
+        msg.innerText="Passwords do not match";
+        msg.style.color="red";
+        btn.disabled=true;
+    }
+}
+
+/* LOGOUT MODAL */
+function openLogout(){
+    document.getElementById("overlay").classList.add("active");
+    document.getElementById("logoutModal").classList.add("open");
+}
+
+function closeLogout(){
+    document.getElementById("overlay").classList.remove("active");
+    document.getElementById("logoutModal").classList.remove("open");
+}
+
+function logout(){
+    window.location.href="{{ url_for('logout') }}";
+}
+function showTab(e, id){
+
+    
+    e.preventDefault();
+
+    
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.style.display = 'none';
+    });
+
+    
+    const activeTab = document.getElementById(id);
+    activeTab.style.display = 'block';
+
+    
+    document.querySelectorAll('.menu a').forEach(link => {
+        link.classList.remove('active');
+    });
+
+    
+    e.target.classList.add('active');
+
+  
+    activeTab.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+
+    
+    const firstInput = activeTab.querySelector("input, select, textarea");
+    if(firstInput){
+        firstInput.focus();
+    }
+}
+</script>
+
 </body>
-
 </html>
