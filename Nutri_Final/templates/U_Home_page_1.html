@@ -1,390 +1,394 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <!-- Navbar -->
-    <div class="w3-top">
-        <div class="w3-bar w3-yellow w3-card">
-            <a class="w3-bar-item w3-button w3-padding-large w3-hide-medium w3-hide-large w3-right"
-                href="javascript:void(0)" onclick="myFunction()" title="Toggle Navigation Menu"><i
-                    class="fa fa-bars"></i></a>
-            <!--<a href="U_Home_page_1.html" class="w3-bar-item w3-button w3-padding-large">Home</a>
-            <a href="U_Progress.html" class="w3-bar-item w3-button w3-padding-large w3-hide-small">Progress</a>
-            <a href="U_Discover.html" class="w3-bar-item w3-button w3-padding-large w3-hide-small">Dicover</a>
-            <a href="#tour" class="w3-bar-item w3-button w3-padding-large w3-hide-small">Food Adder</a>
-            <a href="U_Settings.html" class="w3-bar-item w3-button w3-padding-large w3-hide-small">Settings</a>-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-            <a href="{{ url_for('U_Home_page')}}" class="w3-bar-item w3-button w3-padding-large  w3-hide-small">Home</a>
-            <a href="{{ url_for('U_Diet_recommender')}}"
-                class="w3-bar-item w3-button w3-padding-large  w3-hide-small">Diet Recommender</a>
-            <a href="{{ url_for('U_Discover')}}"
-                class="w3-bar-item w3-button w3-padding-large  w3-hide-small">Discover</a>
-            <a href="{{ url_for('U_Select_food')}}" class="w3-bar-item w3-button w3-padding-large w3-hide-small">Food
-                Scanner</a>
-            <a href="{{ url_for('U_Settings')}}"
-                class="w3-bar-item w3-button w3-padding-large w3-hide-small">Settings</a>
-            <!--<div class="w3-dropdown-hover w3-hide-small">
-        <button class="w3-padding-large w3-button" title="More">MORE <i class="fa fa-caret-down"></i></button>     
-        <div class="w3-dropdown-content w3-bar-block w3-card-4">
-          <a href="#" class="w3-bar-item w3-button">Merchandise</a> 
-          <a href="#" class="w3-bar-item w3-button">Extras</a>
-          <a href="#" class="w3-bar-item w3-button">Media</a>
-        </div>
-      </div>
-    -->
-        </div>
-    </div>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
-    <!-- Navbar on small screens (remove the onclick attribute if you want the navbar to always show on top of the content when clicking on the links) -->
-    <div id="navDemo" class="w3-bar-block w3-white w3-border w3-hide w3-hide-large w3-hide-medium w3-top"
-        style="margin-top:46px">
-        <a href="{{ url_for('U_Home_page')}}" class="w3-bar-item w3-button w3-padding-large"
-            onclick="myFunction()">Home</a>
-        <a href="{{ url_for('U_Diet_recommender')}}" class="w3-bar-item w3-button w3-padding-large"
-            onclick="myFunction()">Diet Recommender</a>
-        <a href="{{ url_for('U_Discover')}}" class="w3-bar-item w3-button w3-padding-large"
-            onclick="myFunction()">Discover</a>
-        <a href="{{ url_for('U_Select_food')}}" class="w3-bar-item w3-button w3-padding-large"
-            onclick="myFunction()">Food Scanner</a>
-        <a href="{{ url_for('U_Settings')}}" class="w3-bar-item w3-button w3-padding-large"
-            onclick="myFunction()">Settings</a>
-    </div>
+<style>
+
+/* ===== GLOBAL ===== */
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    background: linear-gradient(135deg,#EDE7FF,#F8F6FF);
+    color: #333;
+}
+
+/* APP CONTAINER */
+.app {
+    max-width: 1200px;
+    margin: auto;
+    padding: 30px 20px 100px;
+}
+
+/* ===== HEADER ===== */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    gap: 20px;
+}
+
+.header-left h2 {
+    font-size: 32px;
+    margin: 0;
+}
+
+.header-left p {
+    margin: 5px 0 0;
+    font-size: 16px;
+    color: #666;
+}
+
+/* ===== TOP RIGHT NAV ===== */
+.top-nav {
+    display: flex;
+    gap: 20px;
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(10px);
+    padding: 10px 18px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.top-nav a {
+    text-decoration: none;
+    color: #555;
+    font-size: 14px;
+    font-weight: 500;
+    position: relative;
+    transition: 0.3s;
+}
+
+.top-nav a:hover {
+    color: #6C63FF;
+}
+
+.top-nav a::after {
+    content: "";
+    position: absolute;
+    width: 0%;
+    height: 2px;
+    background: #6C63FF;
+    bottom: -4px;
+    left: 0;
+    transition: 0.3s;
+}
+
+.top-nav a:hover::after {
+    width: 100%;
+}
+
+/* ===== ALERT ===== */
+.alert-box {
+    padding: 18px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    text-align: center;
+    color: white;
+    font-weight: 500;
+}
+
+.limit { background: linear-gradient(135deg,#ff4e50,#f9d423); }
+.warning { background: linear-gradient(135deg,#f7971e,#ffd200); }
+.good { background: linear-gradient(135deg,#00c9ff,#92fe9d); }
+
+/* ===== GRID ===== */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* ===== CARD ===== */
+.card {
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(108,99,255,0.15);
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* ===== CHART ===== */
+.chart-box {
+    position: relative;
+    width: 100%;
+    max-width: 260px;
+    margin: auto;
+    aspect-ratio: 1/1;
+}
+
+.center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    text-align: center;
+    width: 100%;
+}
+
+.center-text h2 {
+    font-size: 30px;
+    margin: 0;
+    color: #6C63FF;
+}
+
+/* ===== SUMMARY ===== */
+.summary-box {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+.summary-item {
+    flex: 1;
+    margin: 5px;
+    padding: 18px;
+    border-radius: 15px;
+    background: linear-gradient(135deg,#F3F0FF,#E8E4FF);
+    text-align: center;
+}
+
+.summary-item h2 {
+    margin: 5px 0;
+    font-size: 24px;
+    color: #6C63FF;
+}
+
+/* ===== TIMELINE ===== */
+.timeline-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px;
+    border-left: 4px solid #6C63FF;
+    margin-bottom: 10px;
+    background: #F6F4FF;
+    border-radius: 10px;
+}
+
+/* ===== MOBILE NAV ===== */
+.navbar {
+    position: fixed;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.navbar a {
+    text-decoration: none;
+    font-size: 22px;
+    color: #888;
+    transition: 0.3s;
+}
+
+.navbar a:hover {
+    color: #6C63FF;
+}
+
+/* ===== TIPS ===== */
+.tip-box {
+    text-align: center;
+    font-size: 16px;
+    color: #555;
+    padding: 10px;
+}
 
 
-    <!--Image end-->
-    <section style="width: 100%; height: 5vh;"></section>
-    <title>Home Page</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-    <link rel="stylesheet" href="style1.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <style>
-        body,
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6 {
-            font-family: "Raleway", sans-serif
-        }
+/* ===== RESPONSIVE ===== */
+@media(max-width:1025px){
 
-        #chart-wrapper {
-            display: inline-block;
-            position: relative;
-            width: 100%;
-        }
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 
-        input[type=text],
-        select,
-        textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-            margin-top: 6px;
-            margin-bottom: 16px;
-            resize: vertical;
-        }
+    .top-nav {
+        display: none;
+    }
 
-        input[type=submit] {
-            background-color: #04AA6D;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+    .grid {
+        grid-template-columns: 1fr;
+    }
 
-        input[type=submit]:hover {
-            background-color: #45a049;
-        }
+    .summary-box {
+        flex-direction: column;
+    }
 
-        .container {
-            border-radius: 5px;
-            background-color: #ffffff;
-            padding: 20px;
-        }
-
-
-        
-        table,tr,th,td{
-        border: 1px solid black;
-        border-collapse: collapse;
-        }
-
-
-        tr:nth-child(even) {
-        background-color: rgba(150, 212, 212, 0.4);
-        }
-
-        th:nth-child(even),td:nth-child(even) {
-        background-color: rgba(150, 212, 212, 0.4);
-        }
-
-        .alert-box {
-        padding: 20px;
-        background: linear-gradient(135deg, #ff4e50, #f9d423);
-        color: white;
-        border-radius: 12px;
-        margin: 20px auto;
-        width: 60%;
-        text-align: center;
-        font-size: 18px;
-        box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
-        animation: fadeIn 0.6s ease-in-out;
-        }
-
-        .closebtn {
-        margin-left: 15px;
-        float: right;
-        font-size: 22px;
-        cursor: pointer;
-        }
-
-        @keyframes fadeIn {
-        from {opacity: 0; transform: translateY(-10px);}
-        to {opacity: 1; transform: translateY(0);}
-        }
-
-    </style>
+    .header-left h2 {
+        font-size: 26px;
+    }
+}
+/* HIDE MOBILE NAVBAR ON DESKTOP */
+@media (min-width: 1025px) {
+    .navbar {
+        display: none !important;
+    }
+}
+</style>
 </head>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 
-<body class="w3-content" style="max-width:1600px;">
+<body>
 
-    <!-- Sidebar/menu -->
+<div class="app">
 
+<!-- HEADER -->
+<div class="header">
 
-    <!-- Overlay effect when opening sidebar on small screens -->
-    <div class="w3-overlay w3-hide-large w3-animate-opacity" onclick="w3_close()" style="cursor:pointer"
-        title="close side menu" id="myOverlay"></div>
-
-    <!-- !PAGE CONTENT! -->
-    <div class="w3-main" style="margin-left:20px; margin-top: 30px;">
-        <h1><b>
-            <center>Welcome {{current_user.fname}}!</center>
-            </b></h1>
+    <div class="header-left">
+        <h2>Hello {{current_user.fname}}</h2>
+        <p>Track your daily nutrition</p>
     </div>
 
-    
+    <!-- DESKTOP NAV -->
+    <div class="top-nav">
+        <a href="{{ url_for('U_Home_page') }}">Home</a>
+        <a href="{{ url_for('U_Diet_recommender') }}">Diet</a>
+        <a href="{{ url_for('U_Discover') }}">Discover</a>
+        <a href="{{ url_for('U_Select_food') }}">Scanner</a>
+        <a href="{{ url_for('U_Settings') }}">Settings</a>
+    </div>
+
+</div>
+
+<!-- ALERT -->
+{% if msg == "limit" %}
+<div class="alert-box limit">⚠ Calorie limit reached</div>
+{% elif msg == "warning" %}
+<div class="alert-box warning">⚡ Almost at your limit</div>
+{% elif msg == "good" %}
+<div class="alert-box good">🔥 Great job!</div>
+{% endif %}
 
 
-    <div class="w3-container w3-content" style="max-width:800px;margin-top:30px; margin: auto; align-content: center;">
-        <!-- The Grid -->
-        <div class="w3-row ">
-            <!-- Left Column -->
-            <!-- <div class="w3-col m7">-->
-            <!-- Profile -->
+<!-- GRID -->
+<div class="grid">
 
-            <div id="warn" class="w3-container w3-center" >
+<!-- CHART -->
+<div class="card">
+    <h3>Calories</h3>
 
-                {% if msg == "limit" %}
-                <div class="alert-box">
-                    <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
-                    <strong>⚠ Calorie Limit Reached!</strong><br>
-                    You've hit your daily goal. Try light snacks or save for tomorrow!
-                </div>
-                {% elif msg == "warning" %}
-                <div class="alert-box" style="background: linear-gradient(135deg, #f7971e, #ffd200);">
-                    <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
-                    <strong>⚡ Almost There!</strong><br>
-                    You're close to your calorie limit.
-                </div>
-                {% elif msg == "good" %}
-                <div class="alert-box" style="background: linear-gradient(135deg, #00c9ff, #92fe9d);">
-                    <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
-                    <strong>🔥 Great Job!</strong><br>
-                    Enjoy your meal and nourish your body.
-                </div>
-                {% endif %}
-        
-            </div>
-            <div class="w3-card w3-round w3-white w3-margin ">
-                <div class="w3-container">
-                    <h4 class="w3-center"><b>My Progress</b></h4>
-                    <script>
-                        let total = {{ (daily.br_cal or 0) + (daily.lu_cal or 0) + (daily.di_cal or 0) }};
-                        let target = {{ current_user.cal or 1 }};
+    <div class="chart-box">
+        <canvas id="chart"></canvas>
 
-                        let a = Math.min(100, Math.round((total / target) * 100));
-                        let c = Math.round(total);
-                    </script>
-                    
-
-
-                    <div id="chart-wrapper w3-center">
-                        <canvas id="myChart" style="width:100%;max-width:600px"></canvas>
-                    </div>
-                    <script>
-                        var xValues = ["Consumed Cal", "Remaining Cal"];
-                        var yValues = [a, 100 - a];
-                        var barColors = [
-                            "#00cc66",
-                            "#0099ff"
-                        ];
-
-                        new Chart("myChart", {
-                            type: "doughnut",
-                            data: {
-                                labels: xValues,
-                                datasets: [{
-                                    backgroundColor: barColors,
-                                    data: yValues
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                legend: {
-                                    display: true,
-                                    position: 'right',
-                                    align: 'center',
-                                    labels: {
-                                        color: 'darkred',
-                                        font: {
-                                            weight: 'bold'
-                                        },
-                                    }
-                                }
-                            }
-                        });
-                    </script>
-                </div>
-                <br>
-            </div>
-
-
-            <div class="w3-card w3-round w3-white w3-margin ">
-                <div class="w3-container">
-
-                    <h4>
-                        <center><b>Calorie Info</b></center>
-                    </h4>
-                   
-
-
-
-                    <table class="w3-center w3-main w3-card"style=" margin-left:20%; margin-bottom: 30px;margin-top: 30px;">
-                        <thead>
-                          <tr>
-                            <th>Consumed Calorie</th>
-                            <th>Remaining Calorie</th>
-                            <th>Total Calorie Required</th>                
-                          </tr>
-                        </thead>
-                
-                        <tbody>
-                          
-                          <tr>
-                            <td>
-                                <script>document.write(a);</script>%
-                            </td>
-                            <td><script>document.write(100-a);</script>%</td>
-                            <td>{{current_user.cal}} Cal</td>
-                          </tr>
-
-
-                        </tbody>
-                      </table>
-                    
-                </div>
-                <br>
-            </div>
-            <!--</div>-->
-            <script>
-                // Script to open and close sidebar
-                function w3_open() {
-                    document.getElementById("mySidebar").style.display = "block";
-                    document.getElementById("myOverlay").style.display = "block";
-                }
-
-                function w3_close() {
-                    document.getElementById("mySidebar").style.display = "none";
-                    document.getElementById("myOverlay").style.display = "none";
-                }
-
-                function myFunction() {
-                    var x = document.getElementById("navDemo");
-                    if (x.className.indexOf("w3-show") == -1) {
-                        x.className += " w3-show";
-                    } else {
-                        x.className = x.className.replace(" w3-show", "");
-                    }
-                }
-            </script>
-
-
-            <!--</div> w3 row div-->
-            <!--<div class="w3-col m7">-->
-            <div class="w3-row-padding">
-                <div class="w3-col m12">
-                    <div class="w3-card w3-round w3-white">
-                        <div class="w3-container w3-padding w3-center">
-
-                            <h4>
-                                <center><b>Tips</b></center>
-                            </h4>
-                            <p id="message" style="text-align: center; color: #000">Refresh for more tips</p>
-                            <div class="centre">
-                               
-                            </div>
-                            <br>
-                            <script src="https://code.jquery.com/jquery-3.6.3.min.js"
-                                integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU="
-                                crossorigin="anonymous"></script>
-                            <script>
-
-                                none();
-                               function none() {
-                                    let val = 1;
-                                    const tips = ["Base your meals on higher fibre starchy carbohydrates.", "Eat lots of fruit and veg.", "Eat more fish,including a portion of oily fish.", "Cut down on saturated fat and sugar.", "Eat less salt: no more than 6g a day for adults.", "Get active and be a healthy weight.", "Do not get thirsty.", "Do not skip breakfast.","Eat healthy and light.","Be mindful about washing your hand regularly","Every 30 minutes, get up and switch positions","Consume high-protein foods to stay alert, such as vegetables, fruit, and crackers with peanut butter","Do meditation, yoga, and deep breathing to manage stress","Make sure to eat enough fruits and vegetables to prevent constipation and dehydration.","Maintain a healthy weight.","Be mindful when selecting supplements","Drink beet juice to enhance your cardiovascular functioning","Embrace deep breathing, meditation, and regular exercise.","Get 10 minutes of daily exposure to enough sunlight","Visit Your Doctor Regularly For Checkups","Use cucumbers to avoid puffiness","Consume beneficial fats like nuts, olive oil, and avocados"];
-                                    val = (Math.floor(Math.random() * (tips.length - 1)))
-                                    document.getElementById("message").innerHTML = tips[val];
-                                    setTimeout(none, 2000);
-                                }
-                                
-                            </script>
-                            <!--<h6 class="w3-opacity">Social Media template by w3.css</h6>
-                    <p contenteditable="true" class="w3-border w3-padding">Status: Feeling Blue</p>
-                    <button type="button" class="w3-button w3-theme"><i class="fa fa-pencil"></i>  Post</button>-->
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!--Code for contact us using w3 schools
-            <div class="w3-container w3-card w3-white w3-round w3-margin"><br>
-                <div class="container">
-                    <h4>
-                        <center><b>Contact-Us</b></center>
-                    </h4>
-                    <form action="/action_page.php">
-                        <label for="fname">First Name</label>
-                        <input type="text" id="fname" name="firstname" placeholder="Your name..">
-
-                        <label for="lname">Last Name</label>
-                        <input type="text" id="lname" name="lastname" placeholder="Your last name..">
-
-                        <label for="country">Country</label>
-                        <select id="country" name="country">
-                            <option value="australia">Australia</option>
-                            <option value="canada">Canada</option>
-                            <option value="usa">USA</option>
-                        </select>
-
-                        <label for="subject">Subject</label>
-                        <textarea id="subject" name="subject" placeholder="Write something.."
-                            style="height:200px"></textarea>
-
-                        <input type="submit" value="Submit">
-                    </form>
-                </div>
-            </div>-->
+        <div class="center-text">
+            <h2 id="percent"></h2>
+            <p>Consumed</p>
         </div>
     </div>
+</div>
+
+<!-- SUMMARY -->
+<div class="card">
+    <h3>Summary</h3>
+
+    <div class="summary-box">
+        <div class="summary-item">
+            <p>Consumed</p>
+            <h2 id="consumed"></h2>
+        </div>
+
+        <div class="summary-item">
+            <p>Remaining</p>
+            <h2 id="remaining"></h2>
+        </div>
+
+        <div class="summary-item">
+            <p>Target</p>
+            <h2>{{target}}</h2>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<div class="card">
+    <h3>Health Tips</h3>
+    <div class="tip-box" id="tip"></div>
+</div>
+
+<!-- TIMELINE -->
+<div class="card">
+    <h3>Today's Activity</h3>
+
+    {% for log in logs %}
+    <div class="timeline-item">
+        <div>
+            <b>{{log.food_name}}</b><br>
+            <small>{{log.meal_type}}</small>
+        </div>
+
+        <div>
+            {{log.time}}<br>
+            {{log.calories}} cal
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+</div>
+
+<!-- MOBILE NAV -->
+<div class="navbar">
+    <a href="{{ url_for('U_Home_page') }}">🏠</a>
+    <a href="{{ url_for('U_Diet_recommender') }}">🥗</a>
+    <a href="{{ url_for('U_Discover') }}">🔍</a>
+    <a href="{{ url_for('U_Select_food') }}">📷</a>
+    <a href="{{ url_for('U_Settings') }}">⚙️</a>
+</div>
+
+<script>
+
+let total = {{ total or 0 }};
+let target = {{ target or 1 }};
+
+let percent = Math.min(100, Math.round((total/target)*100));
+
+document.getElementById("percent").innerText = percent+"%";
+document.getElementById("consumed").innerText = total;
+document.getElementById("remaining").innerText = target-total;
+
+new Chart("chart", {
+    type: "doughnut",
+    data: {
+        datasets: [{
+            data: [percent, 100-percent],
+            backgroundColor: ["#6C63FF","#EAEAF5"]
+        }]
+    },
+    options: {
+        cutout: "80%",
+        plugins:{legend:{display:false}}
+    }
+});
+/* ===== ROTATING TIPS ===== */
+const tips = [
+"Base your meals on higher fibre starchy carbohydrates.", "Eat lots of fruit and veg.", "Eat more fish,including a portion of oily fish.", "Cut down on saturated fat and sugar.", "Eat less salt: no more than 6g a day for adults.", "Get active and be a healthy weight.", "Do not get thirsty.", "Do not skip breakfast.","Eat healthy and light.","Be mindful about washing your hand regularly","Every 30 minutes, get up and switch positions","Consume high-protein foods to stay alert, such as vegetables, fruit, and crackers with peanut butter","Do meditation, yoga, and deep breathing to manage stress","Make sure to eat enough fruits and vegetables to prevent constipation and dehydration.","Maintain a healthy weight.","Be mindful when selecting supplements","Drink beet juice to enhance your cardiovascular functioning","Embrace deep breathing, meditation, and regular exercise.","Get 10 minutes of daily exposure to enough sunlight","Visit Your Doctor Regularly For Checkups","Use cucumbers to avoid puffiness","Consume beneficial fats like nuts, olive oil, and avocados"
+];
+
+function changeTip(){
+    let t = tips[Math.floor(Math.random()*tips.length)];
+    document.getElementById("tip").innerText = t;
+}
+
+setInterval(changeTip, 2500);
+changeTip();
+</script>
 
 </body>
-
 </html>
