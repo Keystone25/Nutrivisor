@@ -3,24 +3,25 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
-<title>Nutrivisor Login</title>
+<title>Nutrivisor</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
 
-/* RESET */
+/* ===== RESET ===== */
 *{
     margin:0;
     padding:0;
     box-sizing:border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body{
     font-family:'Poppins',sans-serif;
-    height:100vh;
+    min-height:100vh;
     display:flex;
     justify-content:center;
     align-items:center;
@@ -28,180 +29,146 @@ body{
     background:#0f0c29;
 }
 
-/* ===== BACKGROUND BLOBS ===== */
-body::before,
-body::after{
-    content:"";
-    position:absolute;
-    width:500px;
-    height:500px;
-    border-radius:50%;
-    filter:blur(120px);
-    z-index:0;
-    animation:move 10s infinite alternate;
-}
-
-body::before{
-    background:#6C63FF;
-    top:-100px;
-    left:-100px;
-}
-
-body::after{
-    background:#A084FF;
-    bottom:-100px;
-    right:-100px;
-}
-
-@keyframes move{
-    0%{transform:translate(0,0);}
-    100%{transform:translate(50px,50px);}
-}
-
-/* ===== GRID PATTERN ===== */
-.bg-pattern{
-    position:absolute;
+/* ===== RIBBON BACKGROUND ===== */
+.ribbon-bg{
+    position:fixed;
     width:100%;
     height:100%;
-    background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
-    background-size:30px 30px;
-    z-index:1;
+    z-index:0;
 }
 
-/* ===== FLOATING DOTS ===== */
-.floating{
+.ribbon{
     position:absolute;
-    width:8px;
-    height:8px;
-    background:white;
-    border-radius:50%;
-    opacity:0.4;
-    animation:float 6s infinite ease-in-out;
+    width:200%;
+    height:120px;
+    opacity:0.25;
+    filter:blur(50px);
+    transform:rotate(-15deg);
+    animation:flow 15s linear infinite;
 }
 
-.floating:nth-child(1){top:20%; left:10%;}
-.floating:nth-child(2){top:70%; left:80%; animation-delay:2s;}
-.floating:nth-child(3){top:50%; left:30%; animation-delay:4s;}
+.ribbon:nth-child(1){
+    top:10%;
+    background:linear-gradient(90deg,#6C63FF,#A084FF);
+}
 
-@keyframes float{
-    0%,100%{transform:translateY(0);}
-    50%{transform:translateY(-20px);}
+.ribbon:nth-child(2){
+    top:45%;
+    background:linear-gradient(90deg,#8EC5FC,#E0C3FC);
+    animation-direction:reverse;
+}
+
+.ribbon:nth-child(3){
+    top:75%;
+    background:linear-gradient(90deg,#FDCB82,#F76B8A);
+}
+
+@keyframes flow{
+    0%{transform:translateX(-60%) rotate(-15deg);}
+    100%{transform:translateX(0%) rotate(-15deg);}
 }
 
 /* ===== LOGIN CARD ===== */
 .wrapper{
-    position:relative;
     z-index:2;
     width:100%;
-    max-width:400px;
-    padding:35px;
-    border-radius:25px;
-    background:rgba(255,255,255,0.1);
+    max-width:380px;
+    padding:25px 20px;
+    border-radius:20px;
+    background:rgba(255,255,255,0.12);
     backdrop-filter:blur(20px);
-    box-shadow:0 10px 50px rgba(0,0,0,0.5);
+    box-shadow:0 10px 40px rgba(0,0,0,0.5);
     color:white;
-    animation:fadeIn 1s ease;
+    transition:0.4s;
 }
 
-@keyframes fadeIn{
-    from{opacity:0; transform:translateY(20px);}
-    to{opacity:1; transform:translateY(0);}
+.wrapper.hidden{
+    opacity:0;
+    transform:scale(0.95);
 }
 
+/* TEXT */
 .wrapper h2{
     text-align:center;
-    margin-bottom:10px;
+    font-size:24px;
 }
 
 .wrapper p{
     text-align:center;
-    font-size:14px;
+    font-size:13px;
     margin-bottom:20px;
     opacity:0.8;
 }
 
 /* INPUT */
 .input_wrap{
-    margin-bottom:18px;
+    margin-bottom:14px;
 }
 
 .input_wrap label{
-    font-size:13px;
+    font-size:12px;
 }
 
 .input_wrap input{
     width:100%;
-    padding:12px;
-    margin-top:5px;
+    padding:14px;
     border-radius:12px;
     border:none;
-    background:rgba(255,255,255,0.15);
+    margin-top:6px;
+    background:rgba(255,255,255,0.2);
     color:white;
 }
 
 /* BUTTON */
 .btn_next{
     width:100%;
-    padding:12px;
+    padding:14px;
     border:none;
     border-radius:12px;
-    background:linear-gradient(135deg,#ffffff,#dcdcff);
+    background:linear-gradient(135deg,#fff,#ddd);
     color:#6C63FF;
     font-weight:600;
     cursor:pointer;
-    transition:0.3s;
-}
-
-.btn_next:hover{
-    transform:scale(1.05);
 }
 
 /* ERROR */
 #error-msg{
-    background:rgba(255,0,0,0.25);
+    background:rgba(255,0,0,0.3);
     padding:10px;
     border-radius:10px;
-    margin-bottom:15px;
+    margin-bottom:10px;
     text-align:center;
 }
 
-/* ===== LOADER ===== */
-#loader{
+/* ===== LOADER OVERLAY ===== */
+.loader-screen{
     position:fixed;
-    top:0;
-    left:0;
     width:100%;
     height:100%;
     background:#0f0c29;
     display:flex;
     justify-content:center;
     align-items:center;
-    z-index:9999;
-
+    flex-direction:column;
+    z-index:5;
     opacity:0;
-    visibility:hidden;
+    pointer-events:none;
     transition:0.4s;
 }
 
-#loader.active{
+.loader-screen.active{
     opacity:1;
-    visibility:visible;
-}
-
-.loader-content{
-    text-align:center;
-    color:white;
+    pointer-events:all;
 }
 
 /* SPINNER */
-.ring{
-    width:80px;
-    height:80px;
+.circle{
+    width:50px;
+    height:50px;
+    border:4px solid rgba(255,255,255,0.2);
+    border-top:4px solid white;
     border-radius:50%;
-    border:5px solid rgba(255,255,255,0.1);
-    border-top:5px solid #A084FF;
     animation:spin 1s linear infinite;
-    margin:0 auto 20px;
 }
 
 @keyframes spin{
@@ -209,14 +176,27 @@ body::after{
     100%{transform:rotate(360deg);}
 }
 
-.loader-content p{
-    opacity:0.7;
+.loader-screen p{
+    color:white;
+    margin-top:15px;
+    font-size:14px;
 }
 
-/* LINK */
-a{
-    color:white;
-    text-decoration:underline;
+/* ===== MOBILE ===== */
+@media(max-width:480px){
+
+    body{
+        align-items:flex-end;
+    }
+
+    .wrapper{
+        border-radius:25px 25px 0 0;
+        max-width:100%;
+    }
+
+    .btn_next{
+        padding:16px;
+    }
 }
 
 </style>
@@ -224,14 +204,15 @@ a{
 
 <body>
 
-<div class="bg-pattern"></div>
+<!-- RIBBONS -->
+<div class="ribbon-bg">
+    <div class="ribbon"></div>
+    <div class="ribbon"></div>
+    <div class="ribbon"></div>
+</div>
 
-<div class="floating"></div>
-<div class="floating"></div>
-<div class="floating"></div>
-
-<!-- LOGIN CARD -->
-<div class="wrapper">
+<!-- LOGIN -->
+<div class="wrapper" id="loginCard">
 
 <h2>Welcome Back 👋</h2>
 <p>Login to Nutrivisor</p>
@@ -244,7 +225,7 @@ a{
 {% endif %}
 {% endwith %}
 
-<form method="post">
+<form id="loginForm" action="{{ request.path }}" method="post">
 
 <div class="input_wrap">
 <label>Email</label>
@@ -256,39 +237,50 @@ a{
 <input type="password" name="pass" required>
 </div>
 
-<button type="submit" class="btn_next">Sign In →</button>
+<button type="submit" class="btn_next">Sign In</button>
 
 </form>
 
-<p style="margin-top:15px;">
+<p style="margin-top:15px;text-align:center;">
 Don't have an account?
-<a href="{{ url_for('signup') }}">Sign Up</a>
+<a href="{{ url_for('signup') }}" style="color:white;">Sign Up</a>
 </p>
 
 </div>
 
-<!-- ===== LOADING SCREEN ===== -->
-<div id="loader">
-    <div class="loader-content">
-        <div class="ring"></div>
-        <h2>Nutrivisor</h2>
-        <p>Analyzing your health data...</p>
-    </div>
+<!-- LOADER -->
+<div class="loader-screen" id="loader">
+    <div class="circle"></div>
+    <p>Logging you in...</p>
 </div>
 
 <script>
-const form = document.querySelector("form");
-const loader = document.getElementById("loader");
 
-form.addEventListener("submit", function(e){
-    e.preventDefault();
+/* SHOW LOADER ON SUBMIT */
+document.getElementById("loginForm").addEventListener("submit", function(){
 
-    loader.classList.add("active");
+    document.getElementById("loginCard").classList.add("hidden");
+    document.getElementById("loader").classList.add("active");
 
-    setTimeout(()=>{
-        form.submit();
-    }, 1500);
 });
+
+/* RESET LOADER WHEN PAGE IS SHOWN AGAIN (BACK BUTTON FIX) */
+window.addEventListener("pageshow", function(event) {
+    if (event.persisted) {
+        resetLoader();
+    }
+});
+
+/* ALSO HANDLE NORMAL LOAD */
+window.addEventListener("load", function() {
+    resetLoader();
+});
+
+function resetLoader(){
+    document.getElementById("loader").classList.remove("active");
+    document.getElementById("loginCard").classList.remove("hidden");
+}
+
 </script>
 
 </body>
