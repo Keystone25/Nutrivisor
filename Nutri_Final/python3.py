@@ -327,8 +327,10 @@ def gen_frames():
 
 
 @app.route('/')
-def main_all():
-    return redirect(url_for('login'))
+@app.route('/U_Landing_Page')
+def U_Landing_Page():
+    return render_template('U_Landing_Page.html')
+
 
 @app.route('/U_Home_page')
 @login_required
