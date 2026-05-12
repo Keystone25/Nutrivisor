@@ -29,7 +29,7 @@ app.config['SECRET_KEY'] = "random string"
 app.config['SESSION_TYPE'] = 'filesystem'
 db = SQLAlchemy(app)
 
-UPLOAD_FOLDER = 'C:/Users/mail4_zofe0iz/Desktop/Latest_Nutri2/static/upload/'
+UPLOAD_FOLDER = 'C:/Users/mail4/OneDrive/Desktop/Nutrivisor/Nutrivisor-V1/Nutri_Final/static/upload/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
@@ -84,7 +84,7 @@ class logsession(db.Model):
     log_date = db.Column(db.String(50))
     log_time = db.Column(db.String(50))
 
-class menu(db.Model):  #this is a table named menu inside the menu1 database for user and admin but only viewing for user
+class menu(db.Model):  #this is a table named menu inside the menu database for user and admin but only viewing for user
     id = db.Column('menu_id', db.Integer, primary_key=True)
     item = db.Column(db.String(50))
     cal = db.Column(db.String(50))
@@ -109,7 +109,7 @@ class MealLog(db.Model):
 
 
 
-class daily2(db.Model):#this is a table named daily2 inside the menu1 database for users
+class daily2(db.Model):#this is a table named daily2 inside the menu database for users
     id = db.Column('daily_id', db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.u_id')) 
     date = db.Column(db.String(20))
@@ -142,8 +142,29 @@ class Feed(db.Model):
     message = db.Column(db.String(600))
     timestamp = db.Column(db.String(50))
 
+
+# =========================
+# Helper Function for capturing today and alos to give proper date formats
+# =========================
+
 def get_today():
-    return datetime.now(timezone("Asia/Kolkata")).strftime('%Y-%m-%d')
+    return datetime.now().strftime('%Y-%m-%d')
+
+def parse_date(date_str):
+
+    formats = [
+        "%Y-%m-%d",
+        "%d-%m-%Y"
+    ]
+
+    for fmt in formats:
+        try:
+            return datetime.strptime(date_str, fmt)
+        except:
+            pass
+
+    return None
+
 # =========================
 # Helper Function for diabetic staus in live capture.
 # =========================
@@ -272,12 +293,12 @@ def gen_frames():
         # =========================
         roi = cv2.resize(frame, (224, 224))
 
-        # ✅ Convert BGR → RGB (CRITICAL)
+        # Convert BGR → RGB (CRITICAL)
         roi = cv2.cvtColor(roi, cv2.COLOR_BGR2RGB)
 
         roi = roi.astype(np.float32)
 
-        # ✅ Teachable Machine normalization
+        # Teachable Machine normalization
         roi = (roi / 127.5) - 1
 
         roi = np.expand_dims(roi, axis=0)
@@ -294,7 +315,7 @@ def gen_frames():
         print("Labels count:", len(labels)) 
         print("Predicted index:", ind)
 
-        # ✅ SAFE CHECK
+        # SAFE CHECK
         if ind >= len(labels):
             print(f"[ERROR] Index {ind} out of range for labels")
             continue
@@ -337,28 +358,28 @@ def U_Landing_Page():
 def U_Home_page():
 
     msg = request.args.get("msg")
-    today = get_today()
+    filter_type = request.args.get("filter", "daily")
 
-    logs = MealLog.query.filter_by(
-        user_id=current_user.id,
-        date=today
-    ).all()
+    today = datetime.now()
 
     quota = daily2.query.filter_by(user_id=current_user.id).first()
 
     if not quota:
         quota = daily2(
             user_id=current_user.id,
-            date=today,
-            br_item='', br_cal=0,
-            lu_item='', lu_cal=0,
-            di_item='', di_cal=0
+            date=today.strftime('%Y-%m-%d'),
+            br_item='',
+            br_cal=0,
+            lu_item='',
+            lu_cal=0,
+            di_item='',
+            di_cal=0
         )
+
         db.session.add(quota)
         db.session.commit()
-
-    if quota.date != today:
-        quota.date = today
+    if quota.date != today.strftime('%Y-%m-%d'):
+        quota.date = today.strftime('%Y-%m-%d')
         quota.br_item = ''
         quota.br_cal = 0
         quota.lu_item = ''
@@ -366,8 +387,130 @@ def U_Home_page():
         quota.di_item = ''
         quota.di_cal = 0
         db.session.commit()
+    total = (
+        (quota.br_cal or 0) +
+        (quota.lu_cal or 0) +
+        (quota.di_cal or 0)
+    )
 
-    total = (quota.br_cal or 0) + (quota.lu_cal or 0) + (quota.di_cal or 0)
+    all_logs = MealLog.query.filter_by(
+        user_id=current_user.id
+    ).all()
+
+    logs = []
+
+    chart_labels = []
+    chart_values = []
+    chart_type = "bar"
+
+    # ================= DAILY =================
+    if filter_type == "daily":
+
+        today_str = today.strftime('%Y-%m-%d')
+
+        logs = MealLog.query.filter_by(
+            user_id=current_user.id,
+            date=today_str
+        ).all()
+
+        breakfast = 0
+        lunch = 0
+        dinner = 0
+
+        for log in logs:
+
+            if log.meal_type.lower() == "breakfast":
+                breakfast += log.calories
+
+            elif log.meal_type.lower() == "lunch":
+                lunch += log.calories
+
+            elif log.meal_type.lower() == "dinner":
+                dinner += log.calories
+
+        chart_labels = ["Breakfast", "Lunch", "Dinner"]
+
+        chart_values = [
+            breakfast,
+            lunch,
+            dinner
+        ]
+
+        chart_type = "bar"
+
+    # ================= WEEKLY =================
+    elif filter_type == "weekly":
+
+        chart_type = "line"
+
+        weekly_data = {}
+
+        for log in all_logs:
+
+            dt = parse_date(log.date)
+
+            if not dt:
+                continue
+
+            diff = (today.date() - dt.date()).days
+
+            if 0 <= diff <= 6:
+
+                day = dt.strftime("%a")
+
+                if day not in weekly_data:
+                    weekly_data[day] = 0
+
+                weekly_data[day] += log.calories
+                logs.append(log)
+
+        sorted_days = sorted(
+            weekly_data.items(),
+            key=lambda x: datetime.strptime(x[0], "%a").weekday()
+        )
+
+        chart_labels = [x[0] for x in sorted_days]
+        chart_values = [x[1] for x in sorted_days]
+
+    # ================= MONTHLY =================
+    # ================= MONTHLY =================
+    elif filter_type == "monthly":
+
+        chart_type = "line"
+
+        monthly_data = {}
+
+        for log in all_logs:
+
+            dt = parse_date(log.date)
+
+            if not dt:
+                continue
+
+            # Group by month
+            month = dt.strftime("%b")   # Jan, Feb, Mar...
+
+            if month not in monthly_data:
+                monthly_data[month] = 0
+
+            monthly_data[month] += log.calories
+
+            logs.append(log)
+
+        # Proper month order
+        month_order = [
+            "Jan", "Feb", "Mar", "Apr",
+            "May", "Jun", "Jul", "Aug",
+            "Sep", "Oct", "Nov", "Dec"
+        ]
+
+        sorted_month = sorted(
+            monthly_data.items(),
+            key=lambda x: month_order.index(x[0])
+        )
+
+        chart_labels = [x[0] for x in sorted_month]
+        chart_values = [x[1] for x in sorted_month]
 
     return render_template(
         'U_Home_page_1.html',
@@ -375,7 +518,11 @@ def U_Home_page():
         total=total,
         target=current_user.cal,
         logs=logs,
-        msg=msg 
+        msg=msg,
+        filter_type=filter_type,
+        chart_labels=chart_labels,
+        chart_values=chart_values,
+        chart_type=chart_type
     )
 
 @app.route('/U_Diet_Recommender')
@@ -585,19 +732,6 @@ def Feedback_Admin_Side():
     feed_data = Feed.query.all()
     return render_template('Feedback_Admin_Side.html', feed=feed_data)
 
-
-
-
-@app.route('/allmenu')
-@login_required
-def allmenu():
-    return render_template('menu_all.html', menu=menu.query.all())
-
-
-@app.route('/allusers')
-@login_required
-def allusers():
-    return render_template('users_all.html', users=User.query.all())
 
 
 @app.route('/new2', methods=['GET', 'POST'])
@@ -812,39 +946,56 @@ def stop_camera():
 
     return {"status": "stopped"}
 
-@app.route('/live_capture')
-@login_required
-def live_capture():
-    return render_template('index1.html',menu=menu.query.all())
-
 
 @app.route('/confirm', methods=['POST'])
 @login_required
 def confirm():
 
-    def calculate_gl(gi, carbs):
-        return (gi * carbs) / 100
-    
-    quota = daily2.query.filter_by(user_id=current_user.id).first()
+    today = datetime.now().strftime('%Y-%m-%d')
 
-    # Create if not exists
+    quota = daily2.query.filter_by(
+        user_id=current_user.id,
+        date=today
+    ).first()
+
+    # Create today's row if not exists
     if not quota:
-        quota = daily2(user_id=current_user.id,usr_cal=0,br_item='', br_cal=0,lu_item='', lu_cal=0,di_item='', di_cal=0)
+        quota = daily2(
+            user_id=current_user.id,
+            date=today,
+            usr_cal=0,
+            br_item='',
+            br_cal=0,
+            lu_item='',
+            lu_cal=0,
+            di_item='',
+            di_cal=0
+        )
+
         db.session.add(quota)
         db.session.commit()
 
-    # Get current total calories
-    total_cal = (quota.br_cal or 0) + (quota.lu_cal or 0) + (quota.di_cal or 0)
+    # Current total calories
+    total_cal = (
+        (quota.br_cal or 0) +
+        (quota.lu_cal or 0) +
+        (quota.di_cal or 0)
+    )
 
     target = current_user.cal
-    # Incoming data
+
+    # Incoming form data
     meal_type = request.form['type']
     cal = float(request.form['cal'])
     item = request.form['item']
 
+    # =========================
+    # DIABETIC SAFETY CHECK
+    # =========================
     selected_food = menu.query.filter_by(item=item).first()
 
     if selected_food:
+
         gi = selected_food.glycemic_index or 50
         carbs = selected_food.carbs or 0
         gl = (gi * carbs) / 100
@@ -852,39 +1003,69 @@ def confirm():
         if current_user.diabetes_type != "none" and gl > 20:
             flash("Not suitable for diabetic patients")
             return redirect(url_for('U_Diet_recommender'))
-    # STOP if limit reached
+
+    # =========================
+    # DAILY LIMIT CHECK
+    # =========================
     if total_cal >= target:
         return redirect(url_for('U_Home_page', msg="limit"))
 
-
-
-    # ADD (not replace)
+    # =========================
+    # ADD FOOD TO DAILY2
+    # =========================
     if meal_type == 'breakfast':
-        quota.br_item = (quota.br_item + ", " + item) if quota.br_item else item
+
+        quota.br_item = (
+            quota.br_item + ", " + item
+        ) if quota.br_item else item
+
         quota.br_cal = (quota.br_cal or 0) + cal
 
     elif meal_type == 'lunch':
-        quota.lu_item = (quota.lu_item + ", " + item) if quota.lu_item else item
+
+        quota.lu_item = (
+            quota.lu_item + ", " + item
+        ) if quota.lu_item else item
+
         quota.lu_cal = (quota.lu_cal or 0) + cal
 
     elif meal_type == 'dinner':
-        quota.di_item = (quota.di_item + ", " + item) if quota.di_item else item
+
+        quota.di_item = (
+            quota.di_item + ", " + item
+        ) if quota.di_item else item
+
         quota.di_cal = (quota.di_cal or 0) + cal
 
+    # =========================
+    # UPDATE TOTAL USER CALORIES
+    # =========================
+    quota.usr_cal = (
+        (quota.br_cal or 0) +
+        (quota.lu_cal or 0) +
+        (quota.di_cal or 0)
+    )
+
+    # =========================
+    # SAVE MEAL LOG
+    # =========================
     new_log = MealLog(
         user_id=current_user.id,
         food_name=item,
         calories=cal,
         meal_type=meal_type,
         time=datetime.now().strftime("%I:%M %p"),
-        date=get_today()
+        date=today
     )
 
     db.session.add(new_log)
+
+    # VERY IMPORTANT
+    db.session.add(quota)
+
     db.session.commit()
 
     return redirect(url_for('U_Home_page'))
- 
 
 @app.route('/signup', methods=['GET','POST'])
 def signup():
@@ -986,7 +1167,7 @@ def login():
         ind_date = datetime.today().strftime('%d-%m-%Y')
 
         
-        today = datetime.now(timezone("Asia/Kolkata")).strftime('%d-%m-%Y')
+        today = datetime.now().strftime('%Y-%m-%d')
         quota = daily2.query.filter_by(user_id=current_user.id).first()
 
         # if no record exists, create one
@@ -1030,8 +1211,8 @@ def logout():
    
     logout_user()
     ind_time = datetime.now(timezone("Asia/Kolkata")).strftime('%H:%M:%S')
-    ind_date = datetime.today().strftime('%d-%m-%Y')
-    log = logsession(log_date=ind_date, log_time=ind_time)
+    ind_date = datetime.today().strftime('%Y-%m-%d')
+    log = logsession(log_date=ind_date, log_time=ind_time)  
     db.session.add(log)
     db.session.commit()
     return redirect(url_for('login'))
@@ -1042,6 +1223,6 @@ def logout():
 if __name__ == '__main__':
     app.app_context().push()
     db.create_all()
-    app.run(debug=True,port=5100)
+    app.run(host='0.0.0.0',debug=True,port=5200)
 
 

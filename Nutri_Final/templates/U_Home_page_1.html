@@ -186,6 +186,48 @@ body {
     border-radius: 10px;
 }
 
+/* ===== ACTIVITY FILTER ===== */
+
+.activity-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:25px;
+    flex-wrap:wrap;
+}
+
+.activity-tabs{
+    display:flex;
+    gap:10px;
+    background:#F3F0FF;
+    padding:6px;
+    border-radius:14px;
+}
+
+.activity-tabs a{
+    text-decoration:none;
+    padding:10px 18px;
+    border-radius:10px;
+    color:#666;
+    font-weight:500;
+    transition:0.3s;
+}
+
+.activity-tabs a:hover{
+    background:#E5DFFF;
+    color:#6C63FF;
+}
+
+.active-tab{
+    background:linear-gradient(135deg,#6C63FF,#8F88FF);
+    color:white !important;
+    box-shadow:0 5px 18px rgba(108,99,255,.25);
+}
+
+.activity-chart-box{
+    width:100%;
+    height:320px;
+}
 /* ===== IOS GLASS NAVBAR ===== */
 .navbar {
     position: fixed;
@@ -416,23 +458,70 @@ body {
 
 <!-- TIMELINE -->
 <div class="card">
-    <h3>Today's Activity</h3>
 
+    <div class="activity-header">
+
+        <h3>Activity Analytics</h3>
+
+        <div class="activity-tabs">
+
+            <a href="{{ url_for('U_Home_page', filter='daily') }}"
+               class="{% if filter_type=='daily' %}active-tab{% endif %}">
+               Daily
+            </a>
+
+            <a href="{{ url_for('U_Home_page', filter='weekly') }}"
+               class="{% if filter_type=='weekly' %}active-tab{% endif %}">
+               Weekly
+            </a>
+
+            <a href="{{ url_for('U_Home_page', filter='monthly') }}"
+               class="{% if filter_type=='monthly' %}active-tab{% endif %}">
+               Monthly
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- GRAPH -->
+    <div class="activity-chart-box">
+        <canvas id="activityChart"></canvas>
+    </div>
+
+    <br>
+
+    <!-- TIMELINE -->
     {% for log in logs %}
+
     <div class="timeline-item">
+
         <div>
             <b>{{log.food_name}}</b><br>
-            <small>{{log.meal_type}}</small>
+            <small>{{log.meal_type}} • {{log.date}}</small>
         </div>
 
         <div>
             {{log.time}}<br>
             {{log.calories}} cal
         </div>
+
     </div>
+
     {% endfor %}
+
 </div>
 
+    <!-- EMPTY STATE -->
+    {% if logs|length == 0 %}
+
+    <div class="empty-state">
+        No activity found
+    </div>
+
+    {% endif %}
+
+</div>
 </div>
 
 <!-- MOBILE NAV -->
@@ -468,6 +557,49 @@ new Chart("chart", {
         plugins:{legend:{display:false}}
     }
 });
+
+
+
+let activityLabels = {{ chart_labels|tojson }};
+let activityValues = {{ chart_values|tojson }};
+let activityType = "{{ chart_type }}";
+
+new Chart("activityChart", {
+
+    type: activityType,
+
+    data: {
+        labels: activityLabels,
+
+        datasets: [{
+            label: "Calories",
+            data: activityValues,
+            fill: activityType === "line",
+            tension: 0.4,
+            borderWidth: 3,
+            backgroundColor: "rgba(108,99,255,0.18)",
+            borderColor: "#6C63FF"
+        }]
+    },
+
+    options: {
+
+        responsive:true,
+        maintainAspectRatio:false,
+
+        plugins:{
+            legend:{display:false}
+        },
+
+        scales:{
+            y:{
+                beginAtZero:true
+            }
+        }
+    }
+});
+
+
 /* ===== ROTATING TIPS ===== */
 const tips = [
 "Base your meals on higher fibre starchy carbohydrates.", "Eat lots of fruit and veg.", "Eat more fish,including a portion of oily fish.", "Cut down on saturated fat and sugar.", "Eat less salt: no more than 6g a day for adults.", "Get active and be a healthy weight.", "Do not get thirsty.", "Do not skip breakfast.","Eat healthy and light.","Be mindful about washing your hand regularly","Every 30 minutes, get up and switch positions","Consume high-protein foods to stay alert, such as vegetables, fruit, and crackers with peanut butter","Do meditation, yoga, and deep breathing to manage stress","Make sure to eat enough fruits and vegetables to prevent constipation and dehydration.","Maintain a healthy weight.","Be mindful when selecting supplements","Drink beet juice to enhance your cardiovascular functioning","Embrace deep breathing, meditation, and regular exercise.","Get 10 minutes of daily exposure to enough sunlight","Visit Your Doctor Regularly For Checkups","Use cucumbers to avoid puffiness","Consume beneficial fats like nuts, olive oil, and avocados"
