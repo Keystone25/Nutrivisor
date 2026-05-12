@@ -20,6 +20,7 @@ from datetime import datetime
 from pytz import timezone
 import re
 
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
@@ -353,12 +354,21 @@ def U_Landing_Page():
     return render_template('U_Landing_Page.html')
 
 
+
 @app.route('/U_Home_page')
 @login_required
 def U_Home_page():
 
     msg = request.args.get("msg")
     filter_type = request.args.get("filter", "daily")
+
+    # NEW
+    selected_year = request.args.get(
+        "year",
+        str(datetime.now().year)
+    )
+
+    selected_year = int(selected_year)
 
     today = datetime.now()
 
@@ -378,6 +388,7 @@ def U_Home_page():
 
         db.session.add(quota)
         db.session.commit()
+
     if quota.date != today.strftime('%Y-%m-%d'):
         quota.date = today.strftime('%Y-%m-%d')
         quota.br_item = ''
@@ -387,6 +398,7 @@ def U_Home_page():
         quota.di_item = ''
         quota.di_cal = 0
         db.session.commit()
+
     total = (
         (quota.br_cal or 0) +
         (quota.lu_cal or 0) +
@@ -473,7 +485,6 @@ def U_Home_page():
         chart_values = [x[1] for x in sorted_days]
 
     # ================= MONTHLY =================
-    # ================= MONTHLY =================
     elif filter_type == "monthly":
 
         chart_type = "line"
@@ -487,8 +498,11 @@ def U_Home_page():
             if not dt:
                 continue
 
-            # Group by month
-            month = dt.strftime("%b")   # Jan, Feb, Mar...
+            # FILTER BY SELECTED YEAR
+            if dt.year != selected_year:
+                continue
+
+            month = dt.strftime("%b")
 
             if month not in monthly_data:
                 monthly_data[month] = 0
@@ -497,7 +511,6 @@ def U_Home_page():
 
             logs.append(log)
 
-        # Proper month order
         month_order = [
             "Jan", "Feb", "Mar", "Apr",
             "May", "Jun", "Jul", "Aug",
@@ -512,6 +525,16 @@ def U_Home_page():
         chart_labels = [x[0] for x in sorted_month]
         chart_values = [x[1] for x in sorted_month]
 
+    # AVAILABLE YEARS
+    available_years = sorted(
+        list(set(
+            parse_date(log.date).year
+            for log in all_logs
+            if parse_date(log.date)
+        )),
+        reverse=True
+    )
+
     return render_template(
         'U_Home_page_1.html',
         daily=quota,
@@ -522,8 +545,12 @@ def U_Home_page():
         filter_type=filter_type,
         chart_labels=chart_labels,
         chart_values=chart_values,
-        chart_type=chart_type
+        chart_type=chart_type,
+        selected_year=selected_year,
+        available_years=available_years
     )
+
+
 
 @app.route('/U_Diet_Recommender')
 @login_required
@@ -867,18 +894,21 @@ def edit_user(id):
 @app.route('/live')
 @login_required
 def index():
+
     nutrition = None
 
     if food_label:
         nutrition = Nutrition.query.filter(
-            Nutrition.food_name.ilike(food_label)
+            Nutrition.food_name.ilike(f"%{food_label}%")
         ).first()
 
-    return render_template('index1.html',
-                           food_label=food_label,
-                           detected=detection_done,
-                           nutrition=nutrition)
 
+    return render_template(
+        'index1.html',
+        food_label=food_label,
+        detected=detection_done,
+        nutrition=nutrition
+    )
 
 @app.route('/video_feed')
 @login_required
@@ -934,6 +964,8 @@ def detect_status():
 
         "diabetic": diabetic_info
     }
+
+
 
 @app.route('/stop_camera', methods=['POST'])
 @login_required
@@ -1007,8 +1039,20 @@ def confirm():
     # =========================
     # DAILY LIMIT CHECK
     # =========================
-    if total_cal >= target:
+
+    new_total = total_cal + cal
+
+    # limit reached
+    if new_total >= target:
         return redirect(url_for('U_Home_page', msg="limit"))
+
+    # almost reached (80%+)
+    elif new_total >= (target * 0.8):
+        msg = "warning"
+
+    # healthy progress
+    else:
+        msg = "good"
 
     # =========================
     # ADD FOOD TO DAILY2
@@ -1065,7 +1109,7 @@ def confirm():
 
     db.session.commit()
 
-    return redirect(url_for('U_Home_page'))
+    return redirect(url_for('U_Home_page',msg=msg))
 
 @app.route('/signup', methods=['GET','POST'])
 def signup():
@@ -1224,5 +1268,3 @@ if __name__ == '__main__':
     app.app_context().push()
     db.create_all()
     app.run(host='0.0.0.0',debug=True,port=5200)
-
-

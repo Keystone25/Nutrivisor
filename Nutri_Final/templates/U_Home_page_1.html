@@ -94,7 +94,7 @@ body {
 
 .limit { background: linear-gradient(135deg,#ff4e50,#f9d423); }
 .warning { background: linear-gradient(135deg,#f7971e,#ffd200); }
-.good { background: linear-gradient(135deg,#00c9ff,#92fe9d); }
+.good { background: linear-gradient(135deg,#23ae1160,#0cfc88); }
 
 /* ===== GRID ===== */
 .grid {
@@ -228,6 +228,84 @@ body {
     width:100%;
     height:320px;
 }
+
+
+/* =========================
+   MONTHLY YEAR FILTER
+========================= */
+
+.year-filter-container {
+    margin-top: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.year-filter-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.year-filter-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: #444;
+}
+
+.year-select {
+
+    padding: 10px 16px;
+
+    border: 1px solid #dcdcdc;
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    font-size: 15px;
+    font-weight: 500;
+
+    color: #333;
+
+    cursor: pointer;
+
+    outline: none;
+
+    transition: all 0.3s ease;
+
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* Hover */
+.year-select:hover {
+    border-color: #4CAF50;
+}
+
+/* Focus */
+.year-select:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
+}
+
+/* Mobile Responsive */
+@media screen and (max-width: 768px) {
+
+    .year-filter-container {
+        justify-content: center;
+    }
+
+    .year-filter-form {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .year-select {
+        width: 100%;
+        max-width: 220px;
+    }
+}
+
 /* ===== IOS GLASS NAVBAR ===== */
 .navbar {
     position: fixed;
@@ -486,11 +564,50 @@ body {
 
     <!-- GRAPH -->
     <div class="activity-chart-box">
+{% if filter_type == "monthly" %}
+
+<div class="year-filter-container">
+
+    <form method="GET"
+          action="{{ url_for('U_Home_page') }}"
+          class="year-filter-form">
+
+        <input type="hidden"
+               name="filter"
+               value="monthly">
+
+        <label class="year-filter-label">
+            Select Year:
+        </label>
+
+        <select name="year"
+                class="year-select"
+                onchange="this.form.submit()">
+
+            {% for year in available_years %}
+
+                <option value="{{ year }}"
+                    {% if year == selected_year %}
+                        selected
+                    {% endif %}
+                >
+                    {{ year }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+    </form>
+
+</div>
+
+{% endif %}
+
         <canvas id="activityChart"></canvas>
     </div>
 
-    <br>
-
+    <br><br><br>
     <!-- TIMELINE -->
     {% for log in logs %}
 
