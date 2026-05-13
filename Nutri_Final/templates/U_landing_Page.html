@@ -409,6 +409,32 @@ header{
     cursor:pointer;
 }
 
+/* close button */
+
+.close-btn{
+    display:none;
+}
+
+@media(max-width:768px){
+
+    .close-btn{
+        display:block;
+        position:absolute;
+        top:30px;
+        right:25px;
+        font-size:30px;
+        cursor:pointer;
+        color:#444;
+        transition:.3s;
+    }
+
+    .close-btn:hover{
+        color:#6C63FF;
+        transform:rotate(90deg);
+    }
+
+}
+
 /* =========================
    HERO
 ========================= */
@@ -940,10 +966,17 @@ footer{
         </div>
 
         <div class="nav-links" id="navLinks">
+
+            <!-- CLOSE BUTTON -->
+            <div class="close-btn" id="closeBtn">
+                ✕
+            </div>
+
             <a href="#home">Home</a>
             <a href="#features">Features</a>
             <a href="#how">How It Works</a>
             <a href="{{ url_for('login') }}">Login</a>
+
         </div>
 
         <a href="{{ url_for('signup') }}" class="nav-btn">
@@ -972,11 +1005,12 @@ footer{
             Smart Nutrition For <span class="gradient">Diabetic & Allergy-Aware</span> Living
         </h1>
 
-        <p>
-            Nutrivisor helps people track daily nutrition, discover safer foods,
-            monitor calorie intake, and identify foods that may trigger allergy
-            reactions — all inside one beautifully optimized experience.
-        </p>
+            <p>
+                Nutrivisor helps users track nutrition, discover diabetic-friendly foods,
+                detect allergy-triggering ingredients, monitor calories through daily,
+                weekly, and monthly charts, and maintain healthier habits with smart
+                exercise recommendations.
+            </p>
 
         <div class="hero-buttons">
 
@@ -1083,10 +1117,11 @@ footer{
             Built For Smarter Everyday Eating
         </h2>
 
-        <p>
-            Carefully designed for diabetic users, allergy-sensitive individuals,
-            and anyone wanting better nutrition awareness.
-        </p>
+            <p>
+                Carefully designed for diabetic users, allergy-sensitive individuals,
+                and users who want smarter nutrition tracking with personalized
+                calorie management and exercise guidance.
+            </p>
 
     </div>
 
@@ -1096,11 +1131,11 @@ footer{
 
             <div class="feature-icon">📊</div>
 
-            <h3>Daily Intake Tracker</h3>
+            <h3>Intake Activity Tracker</h3>
 
             <p>
-                Monitor calories and daily food intake with a clean dashboard
-                experience designed to keep healthy habits simple and motivating.
+                Monitor calorie intake and nutrition progress using interactive
+                daily, weekly, and monthly charts designed to simplify healthy tracking.
             </p>
 
         </div>
@@ -1159,13 +1194,15 @@ footer{
 
         <div class="feature-card">
 
-            <div class="feature-icon">✨</div>
+            <div class="feature-icon">🏃</div>
 
-            <h3>Minimal & Distraction Free</h3>
+            <h3>Smart Exercise Assistance</h3>
 
             <p>
-                A clean experience focused on simplicity, readability,
-                accessibility, and keeping users engaged without clutter.
+
+                Track calories and receive smart exercise suggestions on your dashboard whenever
+                your intake exceeds daily targets, helping maintain a healthier balance.
+
             </p>
 
         </div>
@@ -1312,11 +1349,39 @@ footer{
 
                 <div class="step-icon">📊</div>
 
-                <h3>Track Daily Intake</h3>
+                <h3>Track Progress With Smart Analytics</h3>
 
                 <p>
-                    Monitor calories, meal history, and nutrition progress
-                    through a clean dashboard optimized for every device.
+                    Monitor calorie intake and nutrition progress through
+                    interactive daily, weekly, and monthly charts designed
+                    to help users better understand their eating habits.
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- STEP 6 -->
+
+        <div class="workflow-step reverse">
+
+            <div class="step-number">
+                06
+            </div>
+
+            <div class="step-line"></div>
+
+            <div class="step-card">
+
+                <div class="step-icon">🏃</div>
+
+                <h3>Automatic Exercise Suggestions</h3>
+
+                <p>
+                    If daily calorie intake exceeds the user’s target,
+                    Nutrivisor intelligently recommends exercises and
+                    activities that can help burn excess calories and
+                    maintain a healthier lifestyle balance.
                 </p>
 
             </div>
@@ -1342,11 +1407,12 @@ footer{
             Your Nutrition Journey Starts Here
         </h2>
 
-        <p>
-            Whether you're managing diabetes, avoiding allergy-triggering foods,
-            or simply tracking daily nutrition, Nutrivisor helps you stay aware,
-            informed, and consistent every day.
-        </p>
+            <p>
+                Whether you're managing diabetes, avoiding allergy-triggering foods,
+                tracking daily nutrition, or balancing excess calorie intake with
+                smart exercise recommendations, Nutrivisor helps you stay healthier,
+                informed, and consistent every day.
+            </p>
 
         <a href="{{ url_for('signup') }}" class="cta-btn">
             Start Exploring →
@@ -1385,12 +1451,21 @@ footer{
 
 const menuBtn = document.getElementById("menuBtn");
 const navLinks = document.getElementById("navLinks");
+const closeBtn = document.getElementById("closeBtn");
+
+/* open menu */
 
 menuBtn.addEventListener("click", () => {
-    navLinks.classList.toggle("active");
+    navLinks.classList.add("active");
 });
 
-/* close nav on click */
+/* close menu */
+
+closeBtn.addEventListener("click", () => {
+    navLinks.classList.remove("active");
+});
+
+/* close nav on link click */
 
 document.querySelectorAll(".nav-links a").forEach(link => {
     link.addEventListener("click", () => {
