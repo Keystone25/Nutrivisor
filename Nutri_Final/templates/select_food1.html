@@ -266,9 +266,21 @@ button:hover {
 <!-- FILTER TABS -->
 <div class="tabs">
     <div class="tab active" onclick="filterMeal('all', this)">All</div>
-    <div class="tab" onclick="filterMeal('breakfast', this)">Breakfast</div>
-    <div class="tab" onclick="filterMeal('lunch', this)">Lunch</div>
-    <div class="tab" onclick="filterMeal('dinner', this)">Dinner</div>
+    <div class="tab" onclick="filterMeal('breakfast', this)">
+        Breakfast
+    </div>
+    <div class="tab" onclick="filterMeal('elevenses', this)">
+        Elevenses
+    </div>
+    <div class="tab" onclick="filterMeal('lunch', this)">
+        Lunch
+    </div>
+    <div class="tab" onclick="filterMeal('snacks', this)">
+        Snacks
+    </div>
+    <div class="tab" onclick="filterMeal('dinner', this)">
+        Dinner
+    </div>
 </div>
 
 <!-- CARDS -->
@@ -298,12 +310,15 @@ button:hover {
         </p>
     </div>
 
-    <form action="/confirm" method="post">
-        <input type="hidden" name="type" value="{{ f.food.meal }}">
-        <input type="hidden" name="item" value="{{ f.food.item }}">
-        <input type="hidden" name="cal" value="{{ f.food.cal }}">
-        <button>Add Meal</button>
-    </form>
+<form action="/confirm" method="post"
+      onsubmit="return confirmMeal(event, '{{ f.food.meal }}')">
+
+    <input type="hidden" name="type" value="{{ f.food.meal }}">
+    <input type="hidden" name="item" value="{{ f.food.item }}">
+    <input type="hidden" name="cal" value="{{ f.food.cal }}">
+
+    <button type="submit">Add Meal</button>
+</form>
 
 </div>
 {% endfor %}
@@ -340,6 +355,74 @@ function filterMeal(type, el){
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     el.classList.add("active");
 }
+
+/* FILTER FUNCTION */
+function filterMeal(type, el){
+
+    let cards = document.querySelectorAll(".card");
+
+    cards.forEach(card => {
+        if(type === "all" || card.dataset.meal === type){
+            card.style.display = "block";
+        } else {
+            card.style.display = "none";
+        }
+    });
+
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    el.classList.add("active");
+}
+
+
+/* =========================
+   MEAL TIME WARNING POPUP
+========================= */
+
+function getCurrentMealPeriod() {
+
+    const hour = new Date().getHours();
+
+    if (hour >= 5 && hour < 10) {
+        return "breakfast";
+    }
+
+    else if (hour >= 10 && hour < 12) {
+        return "elevenses";
+    }
+
+    else if (hour >= 12 && hour < 16) {
+        return "lunch";
+    }
+
+    else if (hour >= 16 && hour < 19) {
+        return "snacks";
+    }
+
+    else {
+        return "dinner";
+    }
+}
+
+
+function confirmMeal(event, selectedMeal) {
+
+    const currentMeal = getCurrentMealPeriod();
+
+    /* If correct meal timing → submit directly */
+    if (selectedMeal === currentMeal) {
+        return true;
+    }
+
+    /* Warning popup */
+    return confirm(
+        "You selected " +
+        selectedMeal.toUpperCase() +
+        " during " +
+        currentMeal.toUpperCase() +
+        " time.\n\nDo you wish to continue?"
+    );
+}
+
 
 </script>
 

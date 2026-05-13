@@ -110,17 +110,39 @@ class MealLog(db.Model):
 
 
 
-class daily2(db.Model):#this is a table named daily2 inside the menu database for users
+class daily2(db.Model):
+
     id = db.Column('daily_id', db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.u_id')) 
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.u_id')
+    )
+
     date = db.Column(db.String(20))
+
     usr_cal = db.Column(db.Float)
-    br_item = db.Column(db.String(50), default='')
+
+    # BREAKFAST
+    br_item = db.Column(db.String(200), default='')
     br_cal = db.Column(db.Float, default=0.0)
-    lu_item = db.Column(db.String(50), default='')
+
+    # ELEVENSES
+    el_item = db.Column(db.String(200), default='')
+    el_cal = db.Column(db.Float, default=0.0)
+
+    # LUNCH
+    lu_item = db.Column(db.String(200), default='')
     lu_cal = db.Column(db.Float, default=0.0)
-    di_item = db.Column(db.String(50), default='')
+
+    # SNACKS
+    sn_item = db.Column(db.String(200), default='')
+    sn_cal = db.Column(db.Float, default=0.0)
+
+    # DINNER
+    di_item = db.Column(db.String(200), default='')
     di_cal = db.Column(db.Float, default=0.0)
+
     burned_cal = db.Column(db.Float, default=0.0)
 
 
@@ -155,6 +177,7 @@ class Exercise(db.Model):
     description = db.Column(db.Text)
     steps = db.Column(db.Text)
     image = db.Column(db.String(200))
+
 
 # =========================
 # Helper Function for capturing today and alos to give proper date formats
@@ -374,7 +397,6 @@ def U_Home_page():
     msg = request.args.get("msg")
     filter_type = request.args.get("filter", "daily")
 
-    # NEW
     selected_year = request.args.get(
         "year",
         str(datetime.now().year)
@@ -384,16 +406,28 @@ def U_Home_page():
 
     today = datetime.now()
 
-    quota = daily2.query.filter_by(user_id=current_user.id).first()
+    quota = daily2.query.filter_by(
+        user_id=current_user.id
+    ).first()
 
     if not quota:
+
         quota = daily2(
             user_id=current_user.id,
             date=today.strftime('%Y-%m-%d'),
+
             br_item='',
             br_cal=0,
+
+            el_item='',
+            el_cal=0,
+
             lu_item='',
             lu_cal=0,
+
+            sn_item='',
+            sn_cal=0,
+
             di_item='',
             di_cal=0
         )
@@ -401,21 +435,37 @@ def U_Home_page():
         db.session.add(quota)
         db.session.commit()
 
+    # RESET DAILY DATA
     if quota.date != today.strftime('%Y-%m-%d'):
+
         quota.date = today.strftime('%Y-%m-%d')
+
         quota.br_item = ''
         quota.br_cal = 0
+
+        quota.el_item = ''
+        quota.el_cal = 0
+
         quota.lu_item = ''
         quota.lu_cal = 0
+
+        quota.sn_item = ''
+        quota.sn_cal = 0
+
         quota.di_item = ''
         quota.di_cal = 0
+
         quota.burned_cal = 0
+
         db.session.commit()
 
+    # UPDATED TOTAL
     consumed = (
-    (quota.br_cal or 0) +
-    (quota.lu_cal or 0) +
-    (quota.di_cal or 0)
+        (quota.br_cal or 0) +
+        (quota.el_cal or 0) +
+        (quota.lu_cal or 0) +
+        (quota.sn_cal or 0) +
+        (quota.di_cal or 0)
     )
 
     burned = quota.burned_cal or 0
@@ -443,25 +493,43 @@ def U_Home_page():
         ).all()
 
         breakfast = 0
+        elevenses = 0
         lunch = 0
+        snacks = 0
         dinner = 0
 
         for log in logs:
 
-            if log.meal_type.lower() == "breakfast":
+            meal = log.meal_type.lower()
+
+            if meal == "breakfast":
                 breakfast += log.calories
 
-            elif log.meal_type.lower() == "lunch":
+            elif meal == "elevenses":
+                elevenses += log.calories
+
+            elif meal == "lunch":
                 lunch += log.calories
 
-            elif log.meal_type.lower() == "dinner":
+            elif meal == "snacks":
+                snacks += log.calories
+
+            elif meal == "dinner":
                 dinner += log.calories
 
-        chart_labels = ["Breakfast", "Lunch", "Dinner"]
+        chart_labels = [
+            "Breakfast",
+            "Elevenses",
+            "Lunch",
+            "Snacks",
+            "Dinner"
+        ]
 
         chart_values = [
             breakfast,
+            elevenses,
             lunch,
+            snacks,
             dinner
         ]
 
@@ -495,7 +563,10 @@ def U_Home_page():
 
         sorted_days = sorted(
             weekly_data.items(),
-            key=lambda x: datetime.strptime(x[0], "%a").weekday()
+            key=lambda x: datetime.strptime(
+                x[0],
+                "%a"
+            ).weekday()
         )
 
         chart_labels = [x[0] for x in sorted_days]
@@ -515,7 +586,6 @@ def U_Home_page():
             if not dt:
                 continue
 
-            # FILTER BY SELECTED YEAR
             if dt.year != selected_year:
                 continue
 
@@ -542,7 +612,6 @@ def U_Home_page():
         chart_labels = [x[0] for x in sorted_month]
         chart_values = [x[1] for x in sorted_month]
 
-    # AVAILABLE YEARS
     available_years = sorted(
         list(set(
             parse_date(log.date).year
@@ -559,7 +628,9 @@ def U_Home_page():
         extra = total - current_user.cal
 
         suggested = Exercise.query.order_by(
-            db.func.abs(Exercise.calories_burn - extra)
+            db.func.abs(
+                Exercise.calories_burn - extra
+            )
         ).limit(4).all()
 
     return render_template(
@@ -589,7 +660,6 @@ def U_Diet_recommender():
     def calculate_gl(gi, carbs):
         return (gi * carbs) / 100
 
-    # Diabetes thresholds (clean + scalable)
     limits = {
         "type2": (55, 20),
         "type1": (60, 25),
@@ -598,28 +668,39 @@ def U_Diet_recommender():
         "none": (100, 100)
     }
 
-    gi_limit, gl_limit = limits.get(current_user.diabetes_type, (100, 100))
+    gi_limit, gl_limit = limits.get(
+        current_user.diabetes_type,
+        (100, 100)
+    )
 
-    quota = daily2.query.filter_by(user_id=current_user.id).first()
+    quota = daily2.query.filter_by(
+        user_id=current_user.id
+    ).first()
 
-    # Remaining calories (for ranking)
-    total_cal = (quota.br_cal or 0) + (quota.lu_cal or 0) + (quota.di_cal or 0)
-    remaining_calories = (current_user.cal or 0) - total_cal
+    total_cal = (
+        (quota.br_cal or 0) +
+        (quota.el_cal or 0) +
+        (quota.lu_cal or 0) +
+        (quota.sn_cal or 0) +
+        (quota.di_cal or 0)
+    )
 
-    # Get all foods (NO pre-filtering here)
+    remaining_calories = (
+        current_user.cal or 0
+    ) - total_cal
+
     foods = menu.query.all()
 
     filtered_foods = []
 
-    # Scoring function (ranking logic)
     def calculate_score(food):
+
         gi = food.glycemic_index or 50
         carbs = food.carbs or 0
         cal = float(food.cal or 0)
 
         gl = calculate_gl(gi, carbs)
 
-        # Base diabetic-friendly scoring
         score = (
             (gl * 0.4) +
             (carbs * 0.25) +
@@ -627,18 +708,13 @@ def U_Diet_recommender():
             (cal * 0.15)
         )
 
-        # Personalization
         if remaining_calories < 300:
-            score += cal * 0.2  # penalize high calorie
+            score += cal * 0.2
 
         return score
 
-    # =========================
-    # FILTER LOOP
-    # =========================
     for food in foods:
 
-        #  Allergy filter (safe)
         if current_user.allergy1 and food.allergen1:
             if current_user.allergy1.lower() in food.allergen1.lower():
                 continue
@@ -649,33 +725,33 @@ def U_Diet_recommender():
 
         gi = food.glycemic_index or 50
         carbs = food.carbs or 0
+
         gl = calculate_gl(gi, carbs)
 
-        # GI filter
         if current_user.diabetes_type != "none" and gi > gi_limit:
             continue
 
-        # GL filter
         if current_user.diabetes_type != "none" and gl > gl_limit:
             continue
 
-        # Calculate ranking score
         score = calculate_score(food)
 
-        filtered_foods.append({"food": food,"gi": gi,"gl": gl,"score": score })
+        filtered_foods.append({
+            "food": food,
+            "gi": gi,
+            "gl": gl,
+            "score": score
+        })
 
-    # =========================
-    # SORT (ranking)
-    # =========================
-    filtered_foods.sort(key=lambda x: x["score"])  # lowest score = best
+    filtered_foods.sort(
+        key=lambda x: x["score"]
+    )
 
-    # Extract only food objects for UI
-    ranked_foods = filtered_foods
-
-    print(f"Total foods: {len(foods)}")
-    print(f"Filtered foods: {len(ranked_foods)}")
-
-    return render_template("select_food1.html", menu=filtered_foods, daily=quota)
+    return render_template(
+        "select_food1.html",
+        menu=filtered_foods,
+        daily=quota
+    )
 
 @app.route('/U_Discover')
 @login_required
@@ -754,19 +830,21 @@ def burn_exercise(id):
 
         burned = exercise.calories_burn or 0
 
-        # ADD to burned calories
         quota.burned_cal = (
             quota.burned_cal or 0
         ) + burned
 
-        # RECALCULATE NET TOTAL
         consumed = (
             (quota.br_cal or 0) +
+            (quota.el_cal or 0) +
             (quota.lu_cal or 0) +
+            (quota.sn_cal or 0) +
             (quota.di_cal or 0)
         )
 
-        quota.usr_cal = consumed - quota.burned_cal
+        quota.usr_cal = (
+            consumed - quota.burned_cal
+        )
 
         db.session.commit()
 
@@ -1115,16 +1193,25 @@ def confirm():
         date=today
     ).first()
 
-    # Create today's row if not exists
     if not quota:
+
         quota = daily2(
             user_id=current_user.id,
             date=today,
             usr_cal=0,
+
             br_item='',
             br_cal=0,
+
+            el_item='',
+            el_cal=0,
+
             lu_item='',
             lu_cal=0,
+
+            sn_item='',
+            sn_cal=0,
+
             di_item='',
             di_cal=0
         )
@@ -1132,83 +1219,96 @@ def confirm():
         db.session.add(quota)
         db.session.commit()
 
-    # Current total calories
     total_cal = (
         (quota.br_cal or 0) +
+        (quota.el_cal or 0) +
         (quota.lu_cal or 0) +
+        (quota.sn_cal or 0) +
         (quota.di_cal or 0)
     )
 
     target = current_user.cal
 
-    # Incoming form data
     meal_type = request.form['type']
     cal = float(request.form['cal'])
     item = request.form['item']
 
+
     # =========================
-    # DIABETIC SAFETY CHECK
+    # DIABETIC CHECK
     # =========================
-    selected_food = menu.query.filter_by(item=item).first()
+
+    selected_food = menu.query.filter_by(
+        item=item
+    ).first()
 
     if selected_food:
 
         gi = selected_food.glycemic_index or 50
         carbs = selected_food.carbs or 0
+
         gl = (gi * carbs) / 100
 
-        if current_user.diabetes_type != "none" and gl > 20:
-            flash("Not suitable for diabetic patients")
-            return redirect(url_for('U_Diet_recommender'))
+        if (
+            current_user.diabetes_type != "none"
+            and gl > 20
+        ):
+
+            flash(
+                "Not suitable for diabetic patients"
+            )
+
+            return redirect(
+                url_for('U_Diet_recommender')
+            )
 
     # =========================
-    # DAILY LIMIT CHECK
+    # DAILY LIMIT
     # =========================
 
-    # Total calories AFTER adding new food
     new_total = total_cal + cal
 
-    # Net calories after burned workout calories
-    net_total = new_total - (quota.burned_cal or 0)
+    net_total = new_total - (
+        quota.burned_cal or 0
+    )
 
-    # Calculate percentage safely
-    percentage = (net_total / target) * 100 if target > 0 else 0
+    percentage = (
+        (net_total / target) * 100
+        if target > 0 else 0
+    )
 
-    print("Consumed:", new_total)
-    print("Burned:", quota.burned_cal or 0)
-    print("Net:", net_total)
-    print("Target:", target)
-    print("Percentage:", percentage)
-
-    # =========================
-    # MESSAGE LOGIC
-    # =========================
-
-    # Over 100%
     if percentage > 100:
-
         msg = "limit"
 
-    # 80% to 100%
     elif percentage >= 80:
-
         msg = "warning"
 
-    # Below 80%
     else:
-
         msg = "good"
 
     # =========================
-    # ADD FOOD TO DAILY2
+    # ADD MEAL
     # =========================
+
     if meal_type == 'breakfast':
 
         quota.br_item = (
             quota.br_item + ", " + item
         ) if quota.br_item else item
 
-        quota.br_cal = (quota.br_cal or 0) + cal
+        quota.br_cal = (
+            quota.br_cal or 0
+        ) + cal
+
+    elif meal_type == 'elevenses':
+
+        quota.el_item = (
+            quota.el_item + ", " + item
+        ) if quota.el_item else item
+
+        quota.el_cal = (
+            quota.el_cal or 0
+        ) + cal
 
     elif meal_type == 'lunch':
 
@@ -1216,7 +1316,19 @@ def confirm():
             quota.lu_item + ", " + item
         ) if quota.lu_item else item
 
-        quota.lu_cal = (quota.lu_cal or 0) + cal
+        quota.lu_cal = (
+            quota.lu_cal or 0
+        ) + cal
+
+    elif meal_type == 'snacks':
+
+        quota.sn_item = (
+            quota.sn_item + ", " + item
+        ) if quota.sn_item else item
+
+        quota.sn_cal = (
+            quota.sn_cal or 0
+        ) + cal
 
     elif meal_type == 'dinner':
 
@@ -1224,22 +1336,32 @@ def confirm():
             quota.di_item + ", " + item
         ) if quota.di_item else item
 
-        quota.di_cal = (quota.di_cal or 0) + cal
+        quota.di_cal = (
+            quota.di_cal or 0
+        ) + cal
 
     # =========================
-    # UPDATE TOTAL USER CALORIES
+    # UPDATE USER TOTAL
     # =========================
+
     consumed = (
         (quota.br_cal or 0) +
+        (quota.el_cal or 0) +
         (quota.lu_cal or 0) +
+        (quota.sn_cal or 0) +
         (quota.di_cal or 0)
     )
 
-    quota.usr_cal = consumed - (quota.burned_cal or 0)
+    quota.usr_cal = (
+        consumed - (
+            quota.burned_cal or 0
+        )
+    )
 
     # =========================
-    # SAVE MEAL LOG
+    # SAVE LOG
     # =========================
+
     new_log = MealLog(
         user_id=current_user.id,
         food_name=item,
@@ -1251,12 +1373,16 @@ def confirm():
 
     db.session.add(new_log)
 
-    # VERY IMPORTANT
     db.session.add(quota)
 
     db.session.commit()
 
-    return redirect(url_for('U_Home_page',msg=msg))
+    return redirect(
+        url_for(
+            'U_Home_page',
+            msg=msg
+        )
+    )
 
 @app.route('/signup', methods=['GET','POST'])
 def signup():
