@@ -186,6 +186,106 @@ body {
     border-radius: 10px;
 }
 
+/* ===== exercise recommend card ===== */
+.exercise-recommend-card{
+    margin:25px 0;
+    padding:25px;
+    border-radius:28px;
+    background:linear-gradient(
+        135deg,
+        rgba(255,255,255,.7),
+        rgba(255,255,255,.45)
+    );
+
+    backdrop-filter:blur(18px);
+    box-shadow:0 12px 40px rgba(0,0,0,.08);
+}
+
+.exercise-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+}
+
+.exercise-header h2{
+    margin:0;
+    color:#FF6B6B;
+}
+
+.exercise-scroll{
+    display:flex;
+    gap:18px;
+    overflow-x:auto;
+    padding-bottom:10px;
+}
+
+.exercise-scroll::-webkit-scrollbar{
+    height:6px;
+}
+
+.exercise-scroll::-webkit-scrollbar-thumb{
+    background:#D7CCFF;
+    border-radius:20px;
+}
+
+.exercise-item{
+    min-width:260px;
+    text-decoration:none;
+    background:white;
+    border-radius:24px;
+    overflow:hidden;
+    transition:.3s;
+    box-shadow:0 8px 24px rgba(0,0,0,.08);
+}
+
+.exercise-item:hover{
+    transform:translateY(-5px);
+}
+
+.exercise-image{
+    height:160px;
+    background:#ECE6FF;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+}
+
+.exercise-img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.exercise-placeholder{
+    font-size:60px;
+}
+
+.exercise-content{
+    padding:18px;
+}
+
+.exercise-content h3{
+    margin:0 0 10px;
+}
+
+.exercise-meta{
+    display:flex;
+    justify-content:space-between;
+    font-size:14px;
+    color:#666;
+    margin-bottom:15px;
+}
+
+.exercise-tag{
+    display:inline-block;
+    background:#F3F0FF;
+    color:#6C63FF;
+    padding:8px 14px;
+    border-radius:20px;
+    font-size:13px;
+}
 /* ===== ACTIVITY FILTER ===== */
 
 .activity-header{
@@ -472,6 +572,7 @@ body {
         <a href="{{ url_for('U_Home_page') }}">Home</a>
         <a href="{{ url_for('U_Diet_recommender') }}">Diet</a>
         <a href="{{ url_for('U_Discover') }}">Discover</a>
+        <a href="{{ url_for('U_Exercises') }}">Exercises</a>
         <a href="{{ url_for('U_Select_food') }}">Scanner</a>
         <a href="{{ url_for('U_Settings') }}">Settings</a>
     </div>
@@ -485,8 +586,85 @@ body {
 <div class="alert-box warning">⚡ Almost at your limit</div>
 {% elif msg == "good" %}
 <div class="alert-box good">🔥 Great job!</div>
+{% elif msg == "burned" %}
+<div class="alert-box good">
+    🔥 Calories burned successfully
+</div>
 {% endif %}
 
+{% if total > target %}
+
+<div class="exercise-recommend-card">
+
+    <div class="exercise-header">
+
+        <div>
+
+            <h2>🔥 Burn Suggested Calories</h2>
+
+            <p>
+                You exceeded your target by
+                <b>{{ total - target }} cal</b>
+            </p>
+
+        </div>
+
+    </div>
+
+    <div class="exercise-scroll">
+
+        {% for ex in suggested %}
+
+        <a href="{{ url_for('exercise_detail', id=ex.id) }}"
+           class="exercise-item">
+
+            <div class="exercise-image">
+
+        {% if ex.image %}
+            <img src="{{ ex.image }}"
+                alt="{{ ex.name }}"
+                class="exercise-img">
+        {% else %}
+            <div class="exercise-placeholder">
+                💪
+            </div>
+        {% endif %}
+
+    </div>
+
+            <div class="exercise-content">
+
+                <h3>{{ ex.name }}</h3>
+
+                <div class="exercise-meta">
+
+                    <span>
+                        🔥 {{ ex.calories_burn }} cal
+                    </span>
+
+                    <span>
+                        ⏱ {{ ex.duration }}
+                    </span>
+
+                </div>
+
+                <div class="exercise-tag">
+
+                    {{ ex.difficulty }}
+
+                </div>
+
+            </div>
+
+        </a>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endif %}
 
 <!-- GRID -->
 <div class="grid">
@@ -500,7 +678,7 @@ body {
 
         <div class="center-text">
             <h2 id="percent"></h2>
-            <p>Consumed</p>
+            <p>Net Calories</p>
         </div>
     </div>
 </div>
@@ -510,21 +688,34 @@ body {
     <h3>Summary</h3>
 
     <div class="summary-box">
-        <div class="summary-item">
-            <p>Consumed</p>
-            <h2 id="consumed"></h2>
-        </div>
 
-        <div class="summary-item">
-            <p>Remaining</p>
-            <h2 id="remaining"></h2>
-        </div>
-
-        <div class="summary-item">
-            <p>Target</p>
-            <h2>{{target}}</h2>
-        </div>
+    <div class="summary-item">
+        <p>Food Intake</p>
+        <h2>{{ consumed }}</h2>
     </div>
+
+    <div class="summary-item">
+        <p>Exercise Burn</p>
+        <h2 style="color:#22c55e;">
+            -{{ burned }}
+        </h2>
+    </div>
+
+    <div class="summary-item">
+        <p>Net Calories</p>
+        <h2 style="color:#6C63FF;">
+            {{ total }}
+        </h2>
+    </div>
+
+    <div class="summary-item">
+        <p id="remainingLabel">Remaining Calories</p>
+        <h2 id="remaining"></h2>
+    </div>
+
+</div>
+
+
 </div>
 
 </div>
@@ -646,6 +837,7 @@ body {
     <a href="{{ url_for('U_Home_page') }}">🏠</a>
     <a href="{{ url_for('U_Diet_recommender') }}">🥗</a>
     <a href="{{ url_for('U_Discover') }}">🔍</a>
+    <a href="{{ url_for('U_Exercises') }}">💪</a>
     <a href="{{ url_for('U_Select_food') }}">📷</a>
     <a href="{{ url_for('U_Settings') }}">⚙️</a>
 </div>
@@ -656,10 +848,14 @@ let total = {{ total or 0 }};
 let target = {{ target or 1 }};
 
 let percent = Math.min(100, Math.round((total/target)*100));
+let remaining = target - total;
 
 document.getElementById("percent").innerText = percent+"%";
-document.getElementById("consumed").innerText = total;
-document.getElementById("remaining").innerText = target-total;
+document.getElementById("remaining").innerText = remaining;
+if(remaining < 0){
+    document.getElementById("remaining").style.color = "#ff4e50";
+    document.getElementById("remainingLabel").innerText = "Exceeded Calories";
+}
 
 new Chart("chart", {
     type: "doughnut",

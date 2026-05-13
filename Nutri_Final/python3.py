@@ -121,6 +121,7 @@ class daily2(db.Model):#this is a table named daily2 inside the menu database fo
     lu_cal = db.Column(db.Float, default=0.0)
     di_item = db.Column(db.String(50), default='')
     di_cal = db.Column(db.Float, default=0.0)
+    burned_cal = db.Column(db.Float, default=0.0)
 
 
 class Nutrition(db.Model):
@@ -143,6 +144,17 @@ class Feed(db.Model):
     message = db.Column(db.String(600))
     timestamp = db.Column(db.String(50))
 
+class Exercise(db.Model):
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    calories_burn = db.Column(db.Integer)
+    duration = db.Column(db.String(50))
+    difficulty = db.Column(db.String(20))
+    category = db.Column(db.String(50))
+    description = db.Column(db.Text)
+    steps = db.Column(db.Text)
+    image = db.Column(db.String(200))
 
 # =========================
 # Helper Function for capturing today and alos to give proper date formats
@@ -397,13 +409,18 @@ def U_Home_page():
         quota.lu_cal = 0
         quota.di_item = ''
         quota.di_cal = 0
+        quota.burned_cal = 0
         db.session.commit()
 
-    total = (
-        (quota.br_cal or 0) +
-        (quota.lu_cal or 0) +
-        (quota.di_cal or 0)
+    consumed = (
+    (quota.br_cal or 0) +
+    (quota.lu_cal or 0) +
+    (quota.di_cal or 0)
     )
+
+    burned = quota.burned_cal or 0
+
+    total = consumed - burned
 
     all_logs = MealLog.query.filter_by(
         user_id=current_user.id
@@ -535,6 +552,16 @@ def U_Home_page():
         reverse=True
     )
 
+    suggested = []
+
+    if total > current_user.cal:
+
+        extra = total - current_user.cal
+
+        suggested = Exercise.query.order_by(
+            db.func.abs(Exercise.calories_burn - extra)
+        ).limit(4).all()
+
     return render_template(
         'U_Home_page_1.html',
         daily=quota,
@@ -547,7 +574,10 @@ def U_Home_page():
         chart_values=chart_values,
         chart_type=chart_type,
         selected_year=selected_year,
-        available_years=available_years
+        available_years=available_years,
+        suggested=suggested,
+        consumed=consumed,
+        burned=burned
     )
 
 
@@ -651,6 +681,101 @@ def U_Diet_recommender():
 @login_required
 def U_Discover():
     return render_template('U_Discover.html',menu=menu.query.all(), users=User.query.all(), daily2=daily2.query.all())
+
+@app.route('/U_Exercises')
+@login_required
+def U_Exercises():
+
+    exercises = Exercise.query.all()
+
+    excess = 0
+
+    today = datetime.now().strftime('%Y-%m-%d')
+
+    quota = daily2.query.filter_by(
+        user_id=current_user.id,
+        date=today
+    ).first()
+
+    if quota:
+
+        consumed = (
+        (quota.br_cal or 0) +
+        (quota.lu_cal or 0) +
+        (quota.di_cal or 0)
+    )
+
+    burned = quota.burned_cal or 0
+
+    net_total = consumed - burned
+
+    excess = max(0, net_total - current_user.cal)
+
+    suggested = []
+
+    if excess < 0:
+
+        suggested = Exercise.query.filter(
+            Exercise.calories_burn >= excess / 2
+        ).all()
+
+    return render_template(
+        'U_Exercises.html',
+        exercises=exercises,
+        excess=excess,
+        suggested=suggested
+    )
+
+@app.route('/exercise/<int:id>')
+@login_required
+def exercise_detail(id):
+
+    exercise = Exercise.query.get_or_404(id)
+
+    return render_template(
+        'exercise_detail.html',
+        exercise=exercise
+    )
+
+@app.route('/burn_exercise/<int:id>')
+@login_required
+def burn_exercise(id):
+
+    exercise = Exercise.query.get_or_404(id)
+
+    today = datetime.now().strftime('%Y-%m-%d')
+
+    quota = daily2.query.filter_by(
+        user_id=current_user.id,
+        date=today
+    ).first()
+
+    if quota:
+
+        burned = exercise.calories_burn or 0
+
+        # ADD to burned calories
+        quota.burned_cal = (
+            quota.burned_cal or 0
+        ) + burned
+
+        # RECALCULATE NET TOTAL
+        consumed = (
+            (quota.br_cal or 0) +
+            (quota.lu_cal or 0) +
+            (quota.di_cal or 0)
+        )
+
+        quota.usr_cal = consumed - quota.burned_cal
+
+        db.session.commit()
+
+    return redirect(
+        url_for(
+            'U_Home_page',
+            msg='burned'
+        )
+    )
 
 @app.route('/U_Select_food', methods=['GET', 'POST'])
 @login_required
@@ -1040,18 +1165,38 @@ def confirm():
     # DAILY LIMIT CHECK
     # =========================
 
+    # Total calories AFTER adding new food
     new_total = total_cal + cal
 
-    # limit reached
-    if new_total >= target:
-        return redirect(url_for('U_Home_page', msg="limit"))
+    # Net calories after burned workout calories
+    net_total = new_total - (quota.burned_cal or 0)
 
-    # almost reached (80%+)
-    elif new_total >= (target * 0.8):
+    # Calculate percentage safely
+    percentage = (net_total / target) * 100 if target > 0 else 0
+
+    print("Consumed:", new_total)
+    print("Burned:", quota.burned_cal or 0)
+    print("Net:", net_total)
+    print("Target:", target)
+    print("Percentage:", percentage)
+
+    # =========================
+    # MESSAGE LOGIC
+    # =========================
+
+    # Over 100%
+    if percentage > 100:
+
+        msg = "limit"
+
+    # 80% to 100%
+    elif percentage >= 80:
+
         msg = "warning"
 
-    # healthy progress
+    # Below 80%
     else:
+
         msg = "good"
 
     # =========================
@@ -1084,11 +1229,13 @@ def confirm():
     # =========================
     # UPDATE TOTAL USER CALORIES
     # =========================
-    quota.usr_cal = (
+    consumed = (
         (quota.br_cal or 0) +
         (quota.lu_cal or 0) +
         (quota.di_cal or 0)
     )
+
+    quota.usr_cal = consumed - (quota.burned_cal or 0)
 
     # =========================
     # SAVE MEAL LOG
@@ -1267,4 +1414,83 @@ def logout():
 if __name__ == '__main__':
     app.app_context().push()
     db.create_all()
+    @app.before_request
+    def create_default_exercises():
+
+        if Exercise.query.first():
+            return
+
+        exercises = [
+
+            Exercise(
+                name="Jump Rope",
+                calories_burn=150,
+                duration="15 mins",
+                difficulty="Medium",
+                category="Cardio",
+                description="High intensity cardio workout that improves stamina.",
+                steps="""
+    1. Hold rope handles firmly
+    2. Keep elbows close
+    3. Jump lightly on toes
+    4. Maintain rhythm
+    5. Continue for 15 minutes
+                """,
+                image=""
+            ),
+
+            Exercise(
+                name="Push Ups",
+                calories_burn=100,
+                duration="20 mins",
+                difficulty="Medium",
+                category="Strength",
+                description="Upper body strength workout.",
+                steps="""
+    1. Place hands shoulder width apart
+    2. Keep body straight
+    3. Lower chest slowly
+    4. Push back upward
+    5. Repeat in sets
+                """,
+                image=""
+            ),
+
+            Exercise(
+                name="Cycling",
+                calories_burn=250,
+                duration="30 mins",
+                difficulty="Easy",
+                category="Cardio",
+                description="Low impact calorie burning exercise.",
+                steps="""
+    1. Adjust seat height
+    2. Maintain posture
+    3. Pedal steadily
+    4. Keep breathing controlled
+    5. Continue consistently
+                """,
+                image=""
+            ),
+
+            Exercise(
+                name="Burpees",
+                calories_burn=200,
+                duration="15 mins",
+                difficulty="Hard",
+                category="HIIT",
+                description="Full body explosive workout.",
+                steps="""
+    1. Stand straight
+    2. Squat down
+    3. Jump into plank
+    4. Perform pushup
+    5. Jump upward explosively
+                """,
+                image=""
+            )
+        ]
+
+        db.session.bulk_save_objects(exercises)
+        db.session.commit()
     app.run(host='0.0.0.0',debug=True,port=5200)
