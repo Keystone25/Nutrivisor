@@ -190,22 +190,36 @@ http://127.0.0.1:5200
 
 ---
 
-# Project Structure
+# 📂 Project Structure
 
-```bash
-Nutrivisor/
+```text
+Nutri_Final/
+│
+├── .vscode/
+│
+├── __pycache__/
+│
+├── instance/
+│
+├── model.savedmodel/
 │
 ├── static/
-│   ├── upload/
-│   ├── css/
-│   └── js/
 │
 ├── templates/
 │
-├── food_detect_model.hdf5
 ├── calorie_data.csv
-├── app.py
+├── calorie_data.xlsx
+├── data.xlsx
+│
+├── newmenu1.db
+├── pythonsqlite.db
+│
+├── python3.py
 ├── requirements.txt
+├── saved_model.pb
+├── style.css
+│
+├── .gitignore
 └── README.md
 ```
 
