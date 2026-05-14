@@ -1,0 +1,14 @@
+Flask 
+Flask-SQLAlchemy 
+Flask-Login 
+Werkzeug 
+tensorflow 
+keras
+opencv-python
+numpy
+pandas
+Pillow
+pytz
+sqlalchemy
+h5py
+scikit-learn
