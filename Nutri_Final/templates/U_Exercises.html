@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+      rel="stylesheet">
+
+<title>Exercises</title>
+
+<style>
+
+/* =========================
+   GLOBAL
+========================= */
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+
+    margin:0;
+
+    font-family:'Poppins',sans-serif;
+
+    background:linear-gradient(
+        135deg,
+        #EFE8FF,
+        #F9F7FF
+    );
+
+    color:#222;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.app-header{
+
+    max-width:1200px;
+
+    margin:auto;
+
+    padding:30px 20px 10px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    flex-wrap:wrap;
+
+    gap:20px;
+}
+
+.logo{
+
+    margin:0;
+    font-size:32px;
+    color:#222;
+}
+
+/* =========================
+   DESKTOP NAV
+========================= */
+
+.top-nav{
+
+    display: flex;
+    gap: 20px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    padding: 10px 18px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+
+.top-nav a{
+    text-decoration: none;
+    color: #555;
+    font-size: 14px;
+    font-weight: 500;
+    position: relative;
+    transition: 0.3s;
+}
+
+.top-nav a:hover{
+
+    color:#6C63FF;
+}
+
+.top-nav a::after{
+
+    content:"";
+    position:absolute;
+    left:0;
+    bottom:-6px;
+    width:0;
+    height:2px;
+    background:#6C63FF;
+    transition:.3s;
+}
+
+.top-nav a:hover::after{
+    width:100%;
+}
+
+/* ACTIVE TAB */
+
+.top-nav .active{
+    color:#6C63FF;
+    font-weight:600;
+}
+
+.top-nav .active::after{
+    width:100%;
+}
+
+/* =========================
+   MAIN CONTAINER
+========================= */
+
+.container{
+    padding:20px;
+    max-width:1200px;
+    margin:auto;
+}
+
+.title{
+    font-size:32px;
+    font-weight:600;
+    margin-bottom:20px;
+}
+
+/* =========================
+   ALERT
+========================= */
+
+.alert{
+
+    background:#FFE7E7;
+    color:#D7263D;
+    padding:22px;
+    border-radius:22px;
+    margin-bottom:30px;
+    line-height:1.8;
+    box-shadow:0 10px 30px rgba(255,0,0,0.05);
+}
+
+/* =========================
+   GRID
+========================= */
+
+.exercise-grid{
+    display:grid;
+    grid-template-columns:
+        repeat(auto-fit,minmax(280px,1fr));
+    gap:22px;
+}
+
+/* =========================
+   CARD
+========================= */
+
+.card{
+    background:white;
+    border-radius:25px;
+    overflow:hidden;
+    box-shadow:0 10px 30px rgba(0,0,0,0.08);
+    transition:.3s;
+}
+
+.card:hover{
+    transform:translateY(-5px);
+}
+
+/* =========================
+   IMAGE
+========================= */
+
+.image-placeholder{
+
+    position:relative;
+
+    width:100%;
+
+    height:240px;
+
+    overflow:hidden;
+
+    background:linear-gradient(
+        135deg,
+        #EEE8FF,
+        #F7F4FF
+    );
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+/* IMAGE STYLE */
+.image-placeholder img{
+
+    width:100%;
+
+    height:100%;
+
+    object-fit:cover;
+
+    object-position:center;
+
+    display:block;
+
+    transition:transform .5s ease;
+}
+
+/* ZOOM EFFECT */
+.card:hover .image-placeholder img{
+
+    transform:scale(1.05);
+}
+
+/* SOFT OVERLAY */
+.image-placeholder::after{
+
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    background:linear-gradient(
+        to top,
+        rgba(0,0,0,0.08),
+        rgba(0,0,0,0)
+    );
+
+    pointer-events:none;
+}
+
+/* =========================
+   CONTENT
+========================= */
+
+.content{
+    padding:22px;
+}
+
+.content h2{
+    margin-top:0;
+    margin-bottom:10px;
+    font-size:22px;
+}
+
+.content p{
+    color:#444;
+    line-height:1.7;
+}
+
+/* =========================
+   BADGES
+========================= */
+
+.badges{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:18px 0;
+}
+
+.badge{
+    background:#F3F0FF;
+    color:#6C63FF;
+    padding:8px 14px;
+    border-radius:30px;
+    font-size:13px;
+    font-weight:500;
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+.btn{
+    display:inline-block;
+    margin-top:15px;
+    background:#6C63FF;
+    color:white;
+    padding:12px 18px;
+    border-radius:14px;
+    text-decoration:none;
+    transition:.3s;
+    font-weight:500;
+}
+
+.btn:hover{
+    transform:translateY(-2px);
+    background:#574BFF;
+}
+
+/* =========================
+   MOBILE NAVBAR
+========================= */
+
+.mobile-nav{
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+
+    padding: 16px 0;
+
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(100px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+
+    border: 1px solid rgba(255, 255, 255, 0.4);
+
+    box-shadow:
+        0 8px 30px rgba(0,0,0,0.15),
+        inset 0 1px 1px rgba(255,255,255,0.4);
+}
+
+.mobile-nav a{
+    font-size: 26px;
+    text-decoration: none;
+    color: #444;
+    transition: 0.3s;
+}
+
+.mobile-nav a:hover{
+    transform: scale(1.2);
+    color: #6C63FF;
+}
+
+.mobile-nav a:active{
+    transform: scale(0.9);
+}
+
+/* ACTIVE MOBILE ICON */
+.active-mobile{
+    transform:scale(1.15);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width:1024px){
+
+    .top-nav{
+        display:none;
+    }
+
+    .container{
+        padding-bottom:120px;
+    }
+
+    .logo{
+        font-size:34px;
+    }
+
+    .title{
+        font-size:26px;
+    }
+
+    .image-placeholder{
+        height:210px;
+    }
+}
+
+@media(min-width:1025px){
+
+    .mobile-nav{
+        display:none;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- =========================
+     HEADER
+========================= -->
+
+<div class="app-header">
+
+    <h1 class="logo">
+        Exercises
+    </h1>
+
+    <!-- DESKTOP NAV -->
+
+    <div class="top-nav">
+
+        <a href="{{ url_for('U_Home_page') }}">
+            Home
+        </a>
+
+        <a href="{{ url_for('U_Diet_recommender') }}">
+            Diet
+        </a>
+
+        <a href="{{ url_for('U_Discover') }}">
+            Discover
+        </a>
+
+        <a href="{{ url_for('U_Exercises') }}"
+           class="active">
+
+            Exercises
+        </a>
+
+        <a href="{{ url_for('U_Select_food') }}">
+            Scanner
+        </a>
+
+        <a href="{{ url_for('U_Settings') }}">
+            Settings
+        </a>
+
+    </div>
+
+</div>
+
+<!-- =========================
+     MAIN CONTENT
+========================= -->
+
+<div class="container">
+
+    {% if excess > 0 %}
+
+    <div class="alert">
+
+        You exceeded your calorie goal by
+
+        <b>{{ excess }} calories</b>
+
+        <br><br>
+
+        Recommended exercises are shown below.
+
+    </div>
+
+    {% endif %}
+
+    <div class="exercise-grid">
+
+        {% for ex in exercises %}
+
+        <div class="card">
+
+            <div class="image-placeholder">
+
+                <img src="{{ ex.image }}"
+                     alt="{{ ex.name }}">
+
+            </div>
+
+            <div class="content">
+
+                <h2>
+                    {{ ex.name }}
+                </h2>
+
+                <p>
+                    {{ ex.description }}
+                </p>
+
+                <div class="badges">
+
+                    <div class="badge">
+                        {{ ex.duration }}
+                    </div>
+
+                    <div class="badge">
+                        {{ ex.calories_burn }} cal
+                    </div>
+
+                    <div class="badge">
+                        {{ ex.difficulty }}
+                    </div>
+
+                </div>
+
+                <a class="btn"
+                   href="{{ url_for('exercise_detail', id=ex.id) }}">
+
+                    View More ➜
+
+                </a>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+<!-- =========================
+     MOBILE NAV
+========================= -->
+
+<div class="mobile-nav">
+
+    <a href="{{ url_for('U_Home_page') }}">
+        🏠
+    </a>
+
+    <a href="{{ url_for('U_Diet_recommender') }}">
+        🥗
+    </a>
+
+    <a href="{{ url_for('U_Discover') }}">
+        🔍
+    </a>
+
+    <a href="{{ url_for('U_Exercises') }}"
+       class="active-mobile">
+
+        💪
+    </a>
+
+    <a href="{{ url_for('U_Select_food') }}">
+        📷
+    </a>
+
+    <a href="{{ url_for('U_Settings') }}">
+        ⚙️
+    </a>
+
+</div>
+
+</body>
+</html>

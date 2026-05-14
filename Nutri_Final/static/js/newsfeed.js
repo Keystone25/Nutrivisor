@@ -8,7 +8,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
       newsContainer.innerHTML = "";
 
-
       if (!data.results || data.results.length === 0) {
         newsContainer.innerHTML = "<p>No fitness/health news found.</p>";
         return;
@@ -16,13 +15,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
       data.results.forEach(article => {
 
-        const newsCard = document.createElement("div");
-        newsCard.className = "w3-card-4 w3-margin-bottom";
-
-        
         const image = article.image_url 
           ? article.image_url 
-          : "https://via.placeholder.com/200x100?text=Fitness+News";
+          : "https://via.placeholder.com/400x200";
 
         const description = article.description 
           ? article.description 
@@ -30,13 +25,17 @@ window.addEventListener("DOMContentLoaded", () => {
 
         const link = article.link;
 
+        const newsCard = document.createElement("div");
+        newsCard.className = "news-item";
+
         newsCard.innerHTML = `
-          <img src="${image}" class="w3-image" style="width:auto; height:auto; display:block; margin:auto;">
-          <div class="w3-container w3-padding">
-            <h5>${article.title}</h5>
-            <p>${description}</p>
-            <a href="${link}" target="_blank" class="w3-button w3-blue-grey">Read more</a>
-          </div>
+          <img src="${image}" alt="news">
+          
+          <h4>${article.title}</h4>
+          
+          <p>${description}</p>
+          
+          <a href="${link}" target="_blank" class="read-btn">Read More →</a>
         `;
 
         newsContainer.appendChild(newsCard);
@@ -45,7 +44,7 @@ window.addEventListener("DOMContentLoaded", () => {
     })
     .catch(error => {
       console.error(error);
-      newsContainer.innerHTML = "<p> Failed to load news</p>";
+      newsContainer.innerHTML = "<p>Failed to load news</p>";
     });
 
 });

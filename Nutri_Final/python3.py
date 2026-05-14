@@ -20,6 +20,7 @@ from datetime import datetime
 from pytz import timezone
 import re
 
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
@@ -29,7 +30,7 @@ app.config['SECRET_KEY'] = "random string"
 app.config['SESSION_TYPE'] = 'filesystem'
 db = SQLAlchemy(app)
 
-UPLOAD_FOLDER = 'C:/Users/mail4_zofe0iz/Desktop/Latest_Nutri2/static/upload/'
+UPLOAD_FOLDER = 'C:/Users/mail4/OneDrive/Desktop/Nutrivisor/Nutrivisor-V1/Nutri_Final/static/upload/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
@@ -46,7 +47,7 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(u_id):
-    return User.query.get(int(u_id))
+    return db.session.get(User, int(u_id))
 
 
 
@@ -68,8 +69,8 @@ class User(UserMixin,db.Model):
      bodytype = db.Column(db.String(10))
      activity = db.Column(db.String(20))
      goal = db.Column(db.String(20))
-     health_issues1 = db.Column(db.String(10), default='')
-     health_issues2 = db.Column(db.String(10), default='')
+     diabetes_type = db.Column(db.String(20), default='none')
+     gi_preference = db.Column(db.String(10), default='medium') 
      allergy1 = db.Column(db.String(100), default='')
      allergy2 = db.Column(db.String(100), default='')
      cal = db.Column(db.Float())
@@ -84,7 +85,7 @@ class logsession(db.Model):
     log_date = db.Column(db.String(50))
     log_time = db.Column(db.String(50))
 
-class menu(db.Model):  #this is a table named menu inside the menu1 database for user and admin but only viewing for user
+class menu(db.Model):  #this is a table named menu inside the menu database for user and admin but only viewing for user
     id = db.Column('menu_id', db.Integer, primary_key=True)
     item = db.Column(db.String(50))
     cal = db.Column(db.String(50))
@@ -93,35 +94,69 @@ class menu(db.Model):  #this is a table named menu inside the menu1 database for
     meal = db.Column(db.String(50))
     allergen1 = db.Column(db.String(50), default='')
     allergen2 = db.Column(db.String(50), default='')
-    risk1 = db.Column(db.String(50), default='')
-    risk2 = db.Column(db.String(50), default='')
+    glycemic_index = db.Column(db.Integer, default=50)
+    carbs = db.Column(db.Float, default=0.0) 
     imgpath = db.Column(db.String(100), default='')
+    quantity = db.Column(db.String(50))
 
-
-
-
-
-class daily2(db.Model):#this is a table named daily2 inside the menu1 database for users
-    id = db.Column('daily_id', db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.u_id')) 
+class MealLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.u_id'))
+    food_name = db.Column(db.String(100))
+    calories = db.Column(db.Float)
+    meal_type = db.Column(db.String(20))  # breakfast/lunch/dinner/snack
+    time = db.Column(db.String(20))       # "08:30 AM"
     date = db.Column(db.String(20))
+
+
+
+class daily2(db.Model):
+
+    id = db.Column('daily_id', db.Integer, primary_key=True)
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.u_id')
+    )
+
+    date = db.Column(db.String(20))
+
     usr_cal = db.Column(db.Float)
-    br_item = db.Column(db.String(50), default='')
+
+    # BREAKFAST
+    br_item = db.Column(db.String(200), default='')
     br_cal = db.Column(db.Float, default=0.0)
-    lu_item = db.Column(db.String(50), default='')
+
+    # ELEVENSES
+    el_item = db.Column(db.String(200), default='')
+    el_cal = db.Column(db.Float, default=0.0)
+
+    # LUNCH
+    lu_item = db.Column(db.String(200), default='')
     lu_cal = db.Column(db.Float, default=0.0)
-    di_item = db.Column(db.String(50), default='')
+
+    # SNACKS
+    sn_item = db.Column(db.String(200), default='')
+    sn_cal = db.Column(db.Float, default=0.0)
+
+    # DINNER
+    di_item = db.Column(db.String(200), default='')
     di_cal = db.Column(db.Float, default=0.0)
+
+    burned_cal = db.Column(db.Float, default=0.0)
+
 
 class Nutrition(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     food_name = db.Column(db.String(100), unique=True)
+    quantity = db.Column(db.String(50))
     calories = db.Column(db.Float)
     protein = db.Column(db.Float)
     carbs = db.Column(db.Float)
     fat = db.Column(db.Float)
     fiber = db.Column(db.Float)
-    category = db.Column(db.String(20))  # 'healthy' or 'unhealthy'
+    glycemic_i = db.Column(db.Integer)
+    category = db.Column(db.String(20))
     suggestion = db.Column(db.String(200))
 
 
@@ -130,6 +165,107 @@ class Feed(db.Model):
     name = db.Column(db.String(100))
     message = db.Column(db.String(600))
     timestamp = db.Column(db.String(50))
+
+class Exercise(db.Model):
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    calories_burn = db.Column(db.Integer)
+    duration = db.Column(db.String(50))
+    difficulty = db.Column(db.String(20))
+    category = db.Column(db.String(50))
+    description = db.Column(db.Text)
+    steps = db.Column(db.Text)
+    image = db.Column(db.String(200))
+
+
+# =========================
+# Helper Function for capturing today and alos to give proper date formats
+# =========================
+
+def get_today():
+    return datetime.now().strftime('%Y-%m-%d')
+
+def parse_date(date_str):
+
+    formats = [
+        "%Y-%m-%d",
+        "%d-%m-%Y"
+    ]
+
+    for fmt in formats:
+        try:
+            return datetime.strptime(date_str, fmt)
+        except:
+            pass
+
+    return None
+
+# =========================
+# Helper Function for diabetic staus in live capture.
+# =========================
+
+def get_diabetic_status(food_name, user):
+
+    def calculate_gl(gi, carbs):
+        return (gi * carbs) / 100
+
+    # Diabetes thresholds
+    limits = {
+        "type2": (55, 20),
+        "type1": (60, 25),
+        "prediabetes": (50, 15),
+        "gestational": (45, 10),
+        "none": (100, 100)
+    }
+
+    gi_limit, gl_limit = limits.get(user.diabetes_type, (100, 100))
+
+    # Get food from DB
+    food = Nutrition.query.filter(Nutrition.food_name.ilike(f"%{food_name}%")).first()
+
+    if not food:
+        return {
+            "status": "unknown",
+            "message": "No data available"
+        }
+
+    gi = food.glycemic_i or 50
+    carbs = food.carbs or 0
+    gl = calculate_gl(gi, carbs)
+
+    # =========================
+    # BASE HEALTH LOGIC (FOR EVERYONE)
+    # =========================
+    if gl > 20:
+        status = "avoid"
+        message = "High glycemic load"
+
+    elif gl > 10:
+        status = "moderate"
+        message = "Consume in moderation"
+
+    else:
+        status = "safe"
+        message = "Good choice"
+
+    # =========================
+    # DIABETIC STRICT RULE
+    # =========================
+    if user.diabetes_type != "none":
+        if gl > gl_limit or gi > gi_limit:
+            status = "avoid"
+            message = "Not recommended for diabetic patients"
+
+    # =========================
+    # RETURN EVERYTHING 
+    # =========================
+    return {
+        "status": status,
+        "message": message,
+        "gi": gi,
+        "gl": round(gl, 2)
+    }
 
 
 # =========================
@@ -191,9 +327,16 @@ def gen_frames():
         # =========================
         # PREPROCESS (LIGHTWEIGHT)
         # =========================
-        roi = cv2.resize(frame, (224, 224))   #  smaller = faster
-        roi = img_to_array(roi)
-        roi = roi.astype("float") / 255.0
+        roi = cv2.resize(frame, (224, 224))
+
+        # Convert BGR → RGB (CRITICAL)
+        roi = cv2.cvtColor(roi, cv2.COLOR_BGR2RGB)
+
+        roi = roi.astype(np.float32)
+
+        # Teachable Machine normalization
+        roi = (roi / 127.5) - 1
+
         roi = np.expand_dims(roi, axis=0)
 
         # =========================
@@ -202,13 +345,23 @@ def gen_frames():
         pred = model.predict(roi, verbose=0)
         ind = np.argmax(pred)
         confidence = float(np.max(pred))
+        print("Confidence:", confidence)
+
+        print("Prediction shape:", pred.shape)
+        print("Labels count:", len(labels)) 
+        print("Predicted index:", ind)
+
+        # SAFE CHECK
+        if ind >= len(labels):
+            print(f"[ERROR] Index {ind} out of range for labels")
+            continue
 
         label_text = f"{labels[ind]} ({confidence:.2f})"
 
         # =========================
         # AUTO CAPTURE
         # =========================
-        if confidence > 0.75 and not detection_done:
+        if confidence > 0.60 and not detection_done:
             captured_frame = frame.copy()
             food_label = labels[ind]
             detection_done = True
@@ -231,58 +384,476 @@ def gen_frames():
 
 
 @app.route('/')
-def main_all():
-    return redirect(url_for('login'))
+@app.route('/U_Landing_Page')
+def U_Landing_Page():
+    return render_template('U_Landing_Page.html')
+
+
 
 @app.route('/U_Home_page')
 @login_required
 def U_Home_page():
 
-    today = datetime.now(timezone("Asia/Kolkata")).strftime('%d-%m-%Y')
+    msg = request.args.get("msg")
+    filter_type = request.args.get("filter", "daily")
 
-    quota = daily2.query.filter_by(user_id=current_user.id).first()
+    selected_year = request.args.get(
+        "year",
+        str(datetime.now().year)
+    )
 
-    # Create if not exists
+    selected_year = int(selected_year)
+
+    today = datetime.now()
+
+    quota = daily2.query.filter_by(
+        user_id=current_user.id
+    ).first()
+
     if not quota:
-        quota = daily2(user_id=current_user.id,date=today,br_item='', br_cal=0,lu_item='', lu_cal=0,di_item='', di_cal=0)
+
+        quota = daily2(
+            user_id=current_user.id,
+            date=today.strftime('%Y-%m-%d'),
+
+            br_item='',
+            br_cal=0,
+
+            el_item='',
+            el_cal=0,
+
+            lu_item='',
+            lu_cal=0,
+
+            sn_item='',
+            sn_cal=0,
+
+            di_item='',
+            di_cal=0
+        )
+
         db.session.add(quota)
         db.session.commit()
 
-    # RESET IF NEW DAY
-    if quota.date != today:
-        quota.date = today
+    # RESET DAILY DATA
+    if quota.date != today.strftime('%Y-%m-%d'):
+
+        quota.date = today.strftime('%Y-%m-%d')
+
         quota.br_item = ''
         quota.br_cal = 0
+
+        quota.el_item = ''
+        quota.el_cal = 0
+
         quota.lu_item = ''
         quota.lu_cal = 0
+
+        quota.sn_item = ''
+        quota.sn_cal = 0
+
         quota.di_item = ''
         quota.di_cal = 0
+
+        quota.burned_cal = 0
+
         db.session.commit()
 
-    # CALCULATE TOTAL
-    total = (quota.br_cal or 0) + (quota.lu_cal or 0) + (quota.di_cal or 0)
+    # UPDATED TOTAL
+    consumed = (
+        (quota.br_cal or 0) +
+        (quota.el_cal or 0) +
+        (quota.lu_cal or 0) +
+        (quota.sn_cal or 0) +
+        (quota.di_cal or 0)
+    )
 
-    # STATUS
-    if total >= current_user.cal:
-        msg = "limit"
-    elif total >= current_user.cal * 0.8:
-        msg = "warning"
-    else:
-        msg = "good"
+    burned = quota.burned_cal or 0
 
-    return render_template('U_Home_page_1.html',menu=menu.query.all(),daily=quota,total=total,target=current_user.cal,msg=msg)
+    total = consumed - burned
+
+    all_logs = MealLog.query.filter_by(
+        user_id=current_user.id
+    ).all()
+
+    logs = []
+
+    chart_labels = []
+    chart_values = []
+    chart_type = "bar"
+
+    # ================= DAILY =================
+    if filter_type == "daily":
+
+        today_str = today.strftime('%Y-%m-%d')
+
+        logs = MealLog.query.filter_by(
+            user_id=current_user.id,
+            date=today_str
+        ).all()
+
+        breakfast = 0
+        elevenses = 0
+        lunch = 0
+        snacks = 0
+        dinner = 0
+
+        for log in logs:
+
+            meal = log.meal_type.lower()
+
+            if meal == "breakfast":
+                breakfast += log.calories
+
+            elif meal == "elevenses":
+                elevenses += log.calories
+
+            elif meal == "lunch":
+                lunch += log.calories
+
+            elif meal == "snacks":
+                snacks += log.calories
+
+            elif meal == "dinner":
+                dinner += log.calories
+
+        chart_labels = [
+            "Breakfast",
+            "Elevenses",
+            "Lunch",
+            "Snacks",
+            "Dinner"
+        ]
+
+        chart_values = [
+            breakfast,
+            elevenses,
+            lunch,
+            snacks,
+            dinner
+        ]
+
+        chart_type = "bar"
+
+    # ================= WEEKLY =================
+    elif filter_type == "weekly":
+
+        chart_type = "line"
+
+        weekly_data = {}
+
+        for log in all_logs:
+
+            dt = parse_date(log.date)
+
+            if not dt:
+                continue
+
+            diff = (today.date() - dt.date()).days
+
+            if 0 <= diff <= 6:
+
+                day = dt.strftime("%a")
+
+                if day not in weekly_data:
+                    weekly_data[day] = 0
+
+                weekly_data[day] += log.calories
+                logs.append(log)
+
+        sorted_days = sorted(
+            weekly_data.items(),
+            key=lambda x: datetime.strptime(
+                x[0],
+                "%a"
+            ).weekday()
+        )
+
+        chart_labels = [x[0] for x in sorted_days]
+        chart_values = [x[1] for x in sorted_days]
+
+    # ================= MONTHLY =================
+    elif filter_type == "monthly":
+
+        chart_type = "line"
+
+        monthly_data = {}
+
+        for log in all_logs:
+
+            dt = parse_date(log.date)
+
+            if not dt:
+                continue
+
+            if dt.year != selected_year:
+                continue
+
+            month = dt.strftime("%b")
+
+            if month not in monthly_data:
+                monthly_data[month] = 0
+
+            monthly_data[month] += log.calories
+
+            logs.append(log)
+
+        month_order = [
+            "Jan", "Feb", "Mar", "Apr",
+            "May", "Jun", "Jul", "Aug",
+            "Sep", "Oct", "Nov", "Dec"
+        ]
+
+        sorted_month = sorted(
+            monthly_data.items(),
+            key=lambda x: month_order.index(x[0])
+        )
+
+        chart_labels = [x[0] for x in sorted_month]
+        chart_values = [x[1] for x in sorted_month]
+
+    available_years = sorted(
+        list(set(
+            parse_date(log.date).year
+            for log in all_logs
+            if parse_date(log.date)
+        )),
+        reverse=True
+    )
+
+    suggested = []
+
+    if total > current_user.cal:
+
+        extra = total - current_user.cal
+
+        suggested = Exercise.query.order_by(
+            db.func.abs(
+                Exercise.calories_burn - extra
+            )
+        ).limit(4).all()
+
+    return render_template(
+        'U_Home_page_1.html',
+        daily=quota,
+        total=total,
+        target=current_user.cal,
+        logs=logs,
+        msg=msg,
+        filter_type=filter_type,
+        chart_labels=chart_labels,
+        chart_values=chart_values,
+        chart_type=chart_type,
+        selected_year=selected_year,
+        available_years=available_years,
+        suggested=suggested,
+        consumed=consumed,
+        burned=burned
+    )
+
+
 
 @app.route('/U_Diet_Recommender')
 @login_required
 def U_Diet_recommender():
-    quota = daily2.query.filter_by(user_id=current_user.id).first()
 
-    return render_template('select_food1.html',menu=menu.query.all(),daily=quota)
+    def calculate_gl(gi, carbs):
+        return (gi * carbs) / 100
+
+    limits = {
+        "type2": (55, 20),
+        "type1": (60, 25),
+        "prediabetes": (50, 15),
+        "gestational": (45, 10),
+        "none": (100, 100)
+    }
+
+    gi_limit, gl_limit = limits.get(
+        current_user.diabetes_type,
+        (100, 100)
+    )
+
+    quota = daily2.query.filter_by(
+        user_id=current_user.id
+    ).first()
+
+    total_cal = (
+        (quota.br_cal or 0) +
+        (quota.el_cal or 0) +
+        (quota.lu_cal or 0) +
+        (quota.sn_cal or 0) +
+        (quota.di_cal or 0)
+    )
+
+    remaining_calories = (
+        current_user.cal or 0
+    ) - total_cal
+
+    foods = menu.query.all()
+
+    filtered_foods = []
+
+    def calculate_score(food):
+
+        gi = food.glycemic_index or 50
+        carbs = food.carbs or 0
+        cal = float(food.cal or 0)
+
+        gl = calculate_gl(gi, carbs)
+
+        score = (
+            (gl * 0.4) +
+            (carbs * 0.25) +
+            (gi * 0.2) +
+            (cal * 0.15)
+        )
+
+        if remaining_calories < 300:
+            score += cal * 0.2
+
+        return score
+
+    for food in foods:
+
+        if current_user.allergy1 and food.allergen1:
+            if current_user.allergy1.lower() in food.allergen1.lower():
+                continue
+
+        if current_user.allergy2 and food.allergen2:
+            if current_user.allergy2.lower() in food.allergen2.lower():
+                continue
+
+        gi = food.glycemic_index or 50
+        carbs = food.carbs or 0
+
+        gl = calculate_gl(gi, carbs)
+
+        if current_user.diabetes_type != "none" and gi > gi_limit:
+            continue
+
+        if current_user.diabetes_type != "none" and gl > gl_limit:
+            continue
+
+        score = calculate_score(food)
+
+        filtered_foods.append({
+            "food": food,
+            "gi": gi,
+            "gl": gl,
+            "score": score
+        })
+
+    filtered_foods.sort(
+        key=lambda x: x["score"]
+    )
+
+    return render_template(
+        "select_food1.html",
+        menu=filtered_foods,
+        daily=quota
+    )
 
 @app.route('/U_Discover')
 @login_required
 def U_Discover():
     return render_template('U_Discover.html',menu=menu.query.all(), users=User.query.all(), daily2=daily2.query.all())
+
+@app.route('/U_Exercises')
+@login_required
+def U_Exercises():
+
+    exercises = Exercise.query.all()
+
+    excess = 0
+
+    today = datetime.now().strftime('%Y-%m-%d')
+
+    quota = daily2.query.filter_by(
+        user_id=current_user.id,
+        date=today
+    ).first()
+
+    if quota:
+
+        consumed = (
+        (quota.br_cal or 0) +
+        (quota.lu_cal or 0) +
+        (quota.di_cal or 0)
+    )
+
+    burned = quota.burned_cal or 0
+
+    net_total = consumed - burned
+
+    excess = max(0, net_total - current_user.cal)
+
+    suggested = []
+
+    if excess < 0:
+
+        suggested = Exercise.query.filter(
+            Exercise.calories_burn >= excess / 2
+        ).all()
+
+    return render_template(
+        'U_Exercises.html',
+        exercises=exercises,
+        excess=excess,
+        suggested=suggested
+    )
+
+@app.route('/exercise/<int:id>')
+@login_required
+def exercise_detail(id):
+
+    exercise = Exercise.query.get_or_404(id)
+
+    return render_template(
+        'exercise_detail.html',
+        exercise=exercise
+    )
+
+@app.route('/burn_exercise/<int:id>')
+@login_required
+def burn_exercise(id):
+
+    exercise = Exercise.query.get_or_404(id)
+
+    today = datetime.now().strftime('%Y-%m-%d')
+
+    quota = daily2.query.filter_by(
+        user_id=current_user.id,
+        date=today
+    ).first()
+
+    if quota:
+
+        burned = exercise.calories_burn or 0
+
+        quota.burned_cal = (
+            quota.burned_cal or 0
+        ) + burned
+
+        consumed = (
+            (quota.br_cal or 0) +
+            (quota.el_cal or 0) +
+            (quota.lu_cal or 0) +
+            (quota.sn_cal or 0) +
+            (quota.di_cal or 0)
+        )
+
+        quota.usr_cal = (
+            consumed - quota.burned_cal
+        )
+
+        db.session.commit()
+
+    return redirect(
+        url_for(
+            'U_Home_page',
+            msg='burned'
+        )
+    )
 
 @app.route('/U_Select_food', methods=['GET', 'POST'])
 @login_required
@@ -329,6 +900,7 @@ def UpdateMeasure():
         curr_user.gender = request.form['gender']
         curr_user.age = request.form['age']
         curr_user.bodytype = request.form['bodytype']
+        curr_user.diabetes_type = request.form['diabetes_type']
         db.session.commit()
     return redirect(url_for('U_Settings'))
 
@@ -392,19 +964,6 @@ def Feedback_Admin_Side():
 
 
 
-
-@app.route('/allmenu')
-@login_required
-def allmenu():
-    return render_template('menu_all.html', menu=menu.query.all())
-
-
-@app.route('/allusers')
-@login_required
-def allusers():
-    return render_template('users_all.html', users=User.query.all())
-
-
 @app.route('/new2', methods=['GET', 'POST'])
 @login_required
 def new2():
@@ -421,8 +980,8 @@ def new2():
 
         food = menu(item=request.form['item'], cal=request.form['cal'], stdwt=request.form['stdwt'],
                 cal100=cal100_, meal=request.form['meal'], allergen1=request.form['allergen1'],
-                    allergen2=request.form['allergen2'], risk1=request.form['risk1'], risk2=request.form['risk2'],
-                    imgpath=str(path1))
+                    allergen2=request.form['allergen2'], glycemic_index=request.form['gi'],carbs=request.form['carbs'],
+                    imgpath=str(path1),quantity=request.form['quantity'])
 
         db.session.add(food)
         db.session.commit()
@@ -462,11 +1021,11 @@ def new1():
             bodytype = request.form.get('bdy')
             activity = request.form.get('act')
             goal = request.form.get('goal')
-            health_issues1=request.form.get('health_issues1')
-            health_issues2=request.form.get('health_issues2')
+            diabetes_type = request.form.get('diabetes_type')
+            gi_preference = request.form.get('gi_preference')
             allergy1=request.form.get('allergy1')
             allergy2=request.form.get('allergy2') 
-        new_user1 = User(fname=fname, lname=lname, email=email, phone=phone,dob=dob,password=generate_password_hash(password, method='pbkdf2:sha256'),weight=weight,height=height,age=age,gender=gender,bodytype=bodytype,activity=activity,goal=goal,health_issues1=health_issues1,health_issues2=health_issues2,allergy1=allergy1,allergy2=allergy2,cal=cal_, fat=fat_, protein=protein_, carbs=carbs_)
+        new_user1 = User(fname=fname, lname=lname, email=email, phone=phone,dob=dob,password=generate_password_hash(password, method='pbkdf2:sha256'),weight=weight,height=height,age=age,gender=gender,bodytype=bodytype,activity=activity,goal=goal,diabetes_type=diabetes_type,gi_preference=gi_preference,allergy1=allergy1,allergy2=allergy2,cal=cal_, fat=fat_, protein=protein_, carbs=carbs_)
         if new_user1:
                 db.session.add(new_user1)
                 db.session.commit()
@@ -487,8 +1046,8 @@ def edit_food(id):
         item.meal = request.form['meal']
         item.allergen1 = request.form['allergen1']
         item.allergen2 = request.form['allergen2']
-        item.risk1 = request.form['risk1']
-        item.risk2 = request.form['risk2']
+        item.glycemic_index = request.form['glycemic_index']
+        item.carbs = request.form['carbs']
         item.imgpath = request.form['img']
         
         db.session.commit()
@@ -517,13 +1076,13 @@ def edit_user(id):
         user.goal = request.form['goal']
         user.bodytype = request.form['bodytype']
         user.activity = request.form['act']
+        user.diabetes_type = request.form['diabetes_type']
+        user.gi_preference = request.form['gi_preference']
         user.allergy1 = request.form['allergy1']
         user.allergy2 = request.form['allergy2']
-        user.health_issues1 = request.form['health_issues1']
-        user.health_issues2 = request.form['health_issues2']
         user.cal = request.form['cal']
         user.fat = request.form['fat']
-        user.protien = request.form['protein']
+        user.protein = request.form['protein']
         user.carbs = request.form['carbs']
         
         
@@ -538,18 +1097,21 @@ def edit_user(id):
 @app.route('/live')
 @login_required
 def index():
+
     nutrition = None
 
     if food_label:
         nutrition = Nutrition.query.filter(
-            Nutrition.food_name.ilike(food_label)
+            Nutrition.food_name.ilike(f"%{food_label}%")
         ).first()
 
-    return render_template('index1.html',
-                           food_label=food_label,
-                           detected=detection_done,
-                           nutrition=nutrition)
 
+    return render_template(
+        'index1.html',
+        food_label=food_label,
+        detected=detection_done,
+        nutrition=nutrition
+    )
 
 @app.route('/video_feed')
 @login_required
@@ -577,25 +1139,36 @@ def reset():
 @app.route('/detect_status')
 @login_required
 def detect_status():
+    global detection_done, food_label
 
     nutrition = None
+    diabetic_info = None
 
     if food_label:
         nutrition = Nutrition.query.filter(
             Nutrition.food_name.ilike(f"%{food_label}%")
         ).first()
 
+        diabetic_info = get_diabetic_status(food_label, current_user)
+
     return {
         "detected": detection_done,
         "food": food_label,
+
         "nutrition": {
+            "quantity": nutrition.quantity if nutrition else None,
+            "glycemic_i": nutrition.glycemic_i if nutrition else None,
             "calories": nutrition.calories if nutrition else None,
             "protein": nutrition.protein if nutrition else None,
             "carbs": nutrition.carbs if nutrition else None,
             "fat": nutrition.fat if nutrition else None,
             "suggestion": nutrition.suggestion if nutrition else "No data available"
-        } if nutrition else None
+        } if nutrition else None,
+
+        "diabetic": diabetic_info
     }
+
+
 
 @app.route('/stop_camera', methods=['POST'])
 @login_required
@@ -608,55 +1181,208 @@ def stop_camera():
 
     return {"status": "stopped"}
 
-@app.route('/live_capture')
-@login_required
-def live_capture():
-    return render_template('index1.html',menu=menu.query.all())
-
 
 @app.route('/confirm', methods=['POST'])
 @login_required
 def confirm():
 
-    quota = daily2.query.filter_by(user_id=current_user.id).first()
+    today = datetime.now().strftime('%Y-%m-%d')
 
-    # Create if not exists
+    quota = daily2.query.filter_by(
+        user_id=current_user.id,
+        date=today
+    ).first()
+
     if not quota:
-        quota = daily2(user_id=current_user.id,usr_cal=0,br_item='', br_cal=0,lu_item='', lu_cal=0,di_item='', di_cal=0)
+
+        quota = daily2(
+            user_id=current_user.id,
+            date=today,
+            usr_cal=0,
+
+            br_item='',
+            br_cal=0,
+
+            el_item='',
+            el_cal=0,
+
+            lu_item='',
+            lu_cal=0,
+
+            sn_item='',
+            sn_cal=0,
+
+            di_item='',
+            di_cal=0
+        )
+
         db.session.add(quota)
         db.session.commit()
 
-    # Get current total calories
-    total_cal = (quota.br_cal or 0) + (quota.lu_cal or 0) + (quota.di_cal or 0)
+    total_cal = (
+        (quota.br_cal or 0) +
+        (quota.el_cal or 0) +
+        (quota.lu_cal or 0) +
+        (quota.sn_cal or 0) +
+        (quota.di_cal or 0)
+    )
 
     target = current_user.cal
 
-    # STOP if limit reached
-    if total_cal >= target:
-        return redirect(url_for('U_Home_page', msg="limit"))
-
-    # Incoming data
     meal_type = request.form['type']
     cal = float(request.form['cal'])
     item = request.form['item']
 
-    # ADD (not replace)
+
+    # =========================
+    # DIABETIC CHECK
+    # =========================
+
+    selected_food = menu.query.filter_by(
+        item=item
+    ).first()
+
+    if selected_food:
+
+        gi = selected_food.glycemic_index or 50
+        carbs = selected_food.carbs or 0
+
+        gl = (gi * carbs) / 100
+
+        if (
+            current_user.diabetes_type != "none"
+            and gl > 20
+        ):
+
+            flash(
+                "Not suitable for diabetic patients"
+            )
+
+            return redirect(
+                url_for('U_Diet_recommender')
+            )
+
+    # =========================
+    # DAILY LIMIT
+    # =========================
+
+    new_total = total_cal + cal
+
+    net_total = new_total - (
+        quota.burned_cal or 0
+    )
+
+    percentage = (
+        (net_total / target) * 100
+        if target > 0 else 0
+    )
+
+    if percentage > 100:
+        msg = "limit"
+
+    elif percentage >= 80:
+        msg = "warning"
+
+    else:
+        msg = "good"
+
+    # =========================
+    # ADD MEAL
+    # =========================
+
     if meal_type == 'breakfast':
-        quota.br_item = (quota.br_item + ", " + item) if quota.br_item else item
-        quota.br_cal = (quota.br_cal or 0) + cal
+
+        quota.br_item = (
+            quota.br_item + ", " + item
+        ) if quota.br_item else item
+
+        quota.br_cal = (
+            quota.br_cal or 0
+        ) + cal
+
+    elif meal_type == 'elevenses':
+
+        quota.el_item = (
+            quota.el_item + ", " + item
+        ) if quota.el_item else item
+
+        quota.el_cal = (
+            quota.el_cal or 0
+        ) + cal
 
     elif meal_type == 'lunch':
-        quota.lu_item = (quota.lu_item + ", " + item) if quota.lu_item else item
-        quota.lu_cal = (quota.lu_cal or 0) + cal
+
+        quota.lu_item = (
+            quota.lu_item + ", " + item
+        ) if quota.lu_item else item
+
+        quota.lu_cal = (
+            quota.lu_cal or 0
+        ) + cal
+
+    elif meal_type == 'snacks':
+
+        quota.sn_item = (
+            quota.sn_item + ", " + item
+        ) if quota.sn_item else item
+
+        quota.sn_cal = (
+            quota.sn_cal or 0
+        ) + cal
 
     elif meal_type == 'dinner':
-        quota.di_item = (quota.di_item + ", " + item) if quota.di_item else item
-        quota.di_cal = (quota.di_cal or 0) + cal
+
+        quota.di_item = (
+            quota.di_item + ", " + item
+        ) if quota.di_item else item
+
+        quota.di_cal = (
+            quota.di_cal or 0
+        ) + cal
+
+    # =========================
+    # UPDATE USER TOTAL
+    # =========================
+
+    consumed = (
+        (quota.br_cal or 0) +
+        (quota.el_cal or 0) +
+        (quota.lu_cal or 0) +
+        (quota.sn_cal or 0) +
+        (quota.di_cal or 0)
+    )
+
+    quota.usr_cal = (
+        consumed - (
+            quota.burned_cal or 0
+        )
+    )
+
+    # =========================
+    # SAVE LOG
+    # =========================
+
+    new_log = MealLog(
+        user_id=current_user.id,
+        food_name=item,
+        calories=cal,
+        meal_type=meal_type,
+        time=datetime.now().strftime("%I:%M %p"),
+        date=today
+    )
+
+    db.session.add(new_log)
+
+    db.session.add(quota)
 
     db.session.commit()
 
-    return redirect(url_for('U_Home_page'))
- 
+    return redirect(
+        url_for(
+            'U_Home_page',
+            msg=msg
+        )
+    )
 
 @app.route('/signup', methods=['GET','POST'])
 def signup():
@@ -691,8 +1417,8 @@ def signup():
             bodytype = request.form.get('bdy')
             activity = request.form.get('act')
             goal = request.form.get('goal')
-            health_issues1=request.form.get('health_issues1')
-            health_issues2=request.form.get('health_issues2')
+            diabetes_type = request.form.get('diabetes_type')
+            gi_preference = request.form.get('gi_preference')
             allergy1=request.form.get('allergy1')
             allergy2=request.form.get('allergy2') 
 
@@ -715,7 +1441,7 @@ def signup():
                 return redirect(url_for('signup'))
 
         # create a new user with the form data. Hash the password so the plaintext version isn't saved.
-            new_user = User(fname=fname, lname=lname, email=email, phone=phone,dob=dob,password=generate_password_hash(password, method='pbkdf2:sha256'),weight=weight,height=height,age=age,gender=gender,bodytype=bodytype,activity=activity,goal=goal,health_issues1=health_issues1,health_issues2=health_issues2,allergy1=allergy1,allergy2=allergy2,cal=cal_, fat=fat_, protein=protein_, carbs=carbs_)
+            new_user = User(fname=fname, lname=lname, email=email, phone=phone,dob=dob,password=generate_password_hash(password, method='pbkdf2:sha256'),weight=weight,height=height,age=age,gender=gender,bodytype=bodytype,activity=activity,goal=goal,diabetes_type=diabetes_type,gi_preference=gi_preference,allergy1=allergy1,allergy2=allergy2,cal=cal_, fat=fat_, protein=protein_, carbs=carbs_)
             if new_user:
                     db.session.add(new_user)
                     db.session.commit()
@@ -730,6 +1456,12 @@ def signup():
 
 @app.route('/login', methods=['GET','POST'])
 def login():
+
+    global food_label, captured_frame, detection_done
+
+    food_label = ''
+    captured_frame = None
+    detection_done = False
 
     log_obj = logsession.query.all()
     previous = log_obj[-1].log_date
@@ -752,7 +1484,7 @@ def login():
         ind_date = datetime.today().strftime('%d-%m-%Y')
 
         
-        today = datetime.now(timezone("Asia/Kolkata")).strftime('%d-%m-%Y')
+        today = datetime.now().strftime('%Y-%m-%d')
         quota = daily2.query.filter_by(user_id=current_user.id).first()
 
         # if no record exists, create one
@@ -788,11 +1520,16 @@ def login():
 @login_required
 def logout():
 
+    global food_label, captured_frame, detection_done, camera
+
+    food_label = ''
+    captured_frame = None
+    detection_done = False
    
     logout_user()
     ind_time = datetime.now(timezone("Asia/Kolkata")).strftime('%H:%M:%S')
-    ind_date = datetime.today().strftime('%d-%m-%Y')
-    log = logsession(log_date=ind_date, log_time=ind_time)
+    ind_date = datetime.today().strftime('%Y-%m-%d')
+    log = logsession(log_date=ind_date, log_time=ind_time)  
     db.session.add(log)
     db.session.commit()
     return redirect(url_for('login'))
@@ -803,6 +1540,83 @@ def logout():
 if __name__ == '__main__':
     app.app_context().push()
     db.create_all()
-    app.run(debug=True,port=5100)
+    @app.before_request
+    def create_default_exercises():
 
+        if Exercise.query.first():
+            return
 
+        exercises = [
+
+            Exercise(
+                name="Jump Rope",
+                calories_burn=150,
+                duration="15 mins",
+                difficulty="Medium",
+                category="Cardio",
+                description="High intensity cardio workout that improves stamina.",
+                steps="""
+    1. Hold rope handles firmly
+    2. Keep elbows close
+    3. Jump lightly on toes
+    4. Maintain rhythm
+    5. Continue for 15 minutes
+                """,
+                image=""
+            ),
+
+            Exercise(
+                name="Push Ups",
+                calories_burn=100,
+                duration="20 mins",
+                difficulty="Medium",
+                category="Strength",
+                description="Upper body strength workout.",
+                steps="""
+    1. Place hands shoulder width apart
+    2. Keep body straight
+    3. Lower chest slowly
+    4. Push back upward
+    5. Repeat in sets
+                """,
+                image=""
+            ),
+
+            Exercise(
+                name="Cycling",
+                calories_burn=250,
+                duration="30 mins",
+                difficulty="Easy",
+                category="Cardio",
+                description="Low impact calorie burning exercise.",
+                steps="""
+    1. Adjust seat height
+    2. Maintain posture
+    3. Pedal steadily
+    4. Keep breathing controlled
+    5. Continue consistently
+                """,
+                image=""
+            ),
+
+            Exercise(
+                name="Burpees",
+                calories_burn=200,
+                duration="15 mins",
+                difficulty="Hard",
+                category="HIIT",
+                description="Full body explosive workout.",
+                steps="""
+    1. Stand straight
+    2. Squat down
+    3. Jump into plank
+    4. Perform pushup
+    5. Jump upward explosively
+                """,
+                image=""
+            )
+        ]
+
+        db.session.bulk_save_objects(exercises)
+        db.session.commit()
+    app.run(host='0.0.0.0',debug=True,port=5200)
