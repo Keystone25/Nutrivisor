@@ -1,2 +1,5 @@
-# Nutrivisor-V1
-Nutrivisor is a health tracking app that monitors your food intake and provides personalized diet suggestions, especially for specific health conditions. It includes a food scanner for quick input and updates recommendations based on daily consumption, all within a clean and simple interface.
+# Nutrivisor
+Nutrivisor helps users track nutrition, discover diabetic-friendly foods,
+detect allergy-triggering ingredients, monitor calories through daily,
+weekly, and monthly charts, and maintain healthier habits with smart
+exercise recommendations.
